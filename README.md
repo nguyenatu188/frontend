@@ -1,12 +1,33 @@
-# React + Vite
+## Hướng Dẫn Cài Đặt & Chạy Dự Án
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+### 1. Clone project về máy
+```bash
+git clone https://github.com/nguyenatu188/frontend.git
+cd frontend
+```
 
-Currently, two official plugins are available:
+### 2. Cài node modules và tailwind
+```bash
+npm install tailwindcss @tailwindcss/vite
+```
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### 3. Chỉnh file vite.config.js
+```bash
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react-swc'
+import tailwindcss from '@tailwindcss/vite'
 
-## Expanding the ESLint configuration
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [
+    react(),
+    tailwindcss()
+  ],
+})
 
-If you are developing a production application, we recommend using TypeScript and enable type-aware lint rules. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```
+
+### 4. Chạy development frontend
+```bash
+npm run dev
+```
