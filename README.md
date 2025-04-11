@@ -20,20 +20,10 @@ npm i -D daisyui@latest
 
 ### 4. Cài các thư viện cần cài (framer motion cho animation và router để di chuyển giữa các page)
 ```bash
-npm install framer-motion react-router-dom
+npm install react-icons framer-motion react-router-dom
 ```
 
-### 5.Cài font awesome để dùng icon
-```bash
-npm i --save @fortawesome/fontawesome-svg-core
-
-npm i --save @fortawesome/free-solid-svg-icons
-npm i --save @fortawesome/free-regular-svg-icons
-npm i --save @fortawesome/free-brands-svg-icons
-
-npm i --save @fortawesome/react-fontawesome@latest
-```
-### 6. Chạy development frontend
+### 5. Chạy development frontend
 ```bash
 npm run dev
 ```
