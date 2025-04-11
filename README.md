@@ -8,23 +8,12 @@ cd frontend
 
 ### 2. Cài node modules và tailwind
 ```bash
-npm install tailwindcss @tailwindcss/vite
+npm install tailwindcss @tailwindcss/vite 
 ```
 
-### 3. Chỉnh file vite.config.js
+### 3. Cài daisyUI (rất tiện lợi, nó về cơ bản là các thành phần giao diện (ava, bảng, form, lịch, product card, ...) đã tạo sẵn)
 ```bash
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react-swc'
-import tailwindcss from '@tailwindcss/vite'
-
-// https://vite.dev/config/
-export default defineConfig({
-  plugins: [
-    react(),
-    tailwindcss()
-  ],
-})
-
+npm i -D daisyui@latest
 ```
 
 ### 4. Chạy development frontend
