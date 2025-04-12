@@ -1,10 +1,19 @@
 import React from "react"
 import { FaArrowCircleLeft } from "react-icons/fa"
+import { useNavigate } from "react-router-dom"
 
 export const Login = () => {
+  const navigate = useNavigate()
   return (
     <div className="bg-white flex flex-row justify-center w-full">
       <div className="bg-white w-[1440px] h-[863px] relative">
+        <FaArrowCircleLeft onClick={() => navigate('/')} className="!absolute !w-[30px] !h-[30px] !top-[39px] !left-[23px] text-[#1cb0f6] hover:text-[#1899d6] cursor-pointer transition"/>
+        <button 
+          onClick={() => navigate('/register')}
+          className="absolute top-[30px] left-[1287px] w-[102px] h-12 bg-white rounded-2xl border-2 border-solid border-neutral-200 shadow-[0px_2px_0px_#e5e5e5] text-[#1cb0f6] text-[13px] font-bold tracking-[0.80px] leading-[18px] hover:bg-neutral-100 transition"
+          >
+          ĐĂNG KÝ
+        </button>
         <div className="h-[451px] top-48 left-[532px] absolute w-[375px]">
           <div className="absolute w-[373px] h-[65px] top-[289px] left-px">
             <p className="absolute w-[373px] h-9 top-3.5 left-px font-medium text-[#afafaf] text-sm text-center leading-5">
@@ -31,7 +40,7 @@ export const Login = () => {
               <div className="relative h-0.5 top-[9px] bg-neutral-200" />
             </div>
 
-            <button className="absolute w-[375px] h-[47px] top-[186px] left-0 bg-[#1cb0f6] rounded-2xl shadow-[0px_4px_0px_#1899d6] font-bold text-white text-[13px] tracking-[0.80px] text-center leading-[18px] hover:bg-[#1899d6] transition">
+            <button className="absolute w-[375px] h-[47px] top-[186px] left-0 bg-[#1cb0f6] rounded-2xl shadow-[0px_4px_0px_#1899d6] font-bold text-white text-[13px] text-center leading-[18px] hover:bg-[#1899d6] transition">
               LOG IN
             </button>
 
@@ -61,12 +70,6 @@ export const Login = () => {
             </div>
           </div>
         </div>
-
-        <button className="absolute top-[30px] left-[1287px] w-[102px] h-12 bg-white rounded-2xl border-2 border-solid border-neutral-200 shadow-[0px_2px_0px_#e5e5e5] text-[#1cb0f6] text-[13px] font-bold tracking-[0.80px] leading-[18px] hover:bg-neutral-100 transition">
-          ĐĂNG KÝ
-        </button>
-
-        <FaArrowCircleLeft className="!absolute !w-[30px] !h-[30px] !top-[39px] !left-[23px] text-[#1cb0f6] hover:text-[#1899d6] cursor-pointer transition"/>
       </div>
     </div>
   )
