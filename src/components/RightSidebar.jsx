@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { IconFlame, IconHexagon, IconUserPlus } from "@tabler/icons-react";
+import { IconFlame, IconHexagon, IconUserPlus, IconCoin } from "@tabler/icons-react";
 
 const RightSidebar = () => {
   const [showInvites, setShowInvites] = useState(false);
@@ -11,7 +11,7 @@ const RightSidebar = () => {
         <span className="text-sm font-semibold text-gray-800">157</span>
       </div>
       <div className="flex items-center gap-1">
-        <IconHexagon className="h-6 w-6 text-blue-500" />
+        <IconCoin className="h-6 w-6 text-blue-500" />
         <span className="text-sm font-semibold text-gray-800">913</span>
       </div>
       <div className="flex items-center">
