@@ -6,24 +6,12 @@ git clone https://github.com/nguyenatu188/frontend.git
 cd frontend
 ```
 
-### Những cài đặt dưới này đều ở folder frontend hết nhé
-
-### 2. Cài node modules và tailwind
+### 2. Cài dependencies
 ```bash
-npm install tailwindcss @tailwindcss/vite 
+npm i
 ```
 
-### 3. Cài daisyUI (rất tiện, nó về cơ bản là các thành phần giao diện (ava, bảng, form, lịch, product card, ...) đã tạo sẵn)
-```bash
-npm i -D daisyui@latest
-```
-
-### 4. Cài các thư viện cần cài (framer motion cho animation và router để di chuyển giữa các page)
-```bash
-npm install react-icons framer-motion react-router-dom
-```
-
-### 5. Chạy development frontend
+### 3. Chạy development frontend
 ```bash
 npm run dev
 ```
