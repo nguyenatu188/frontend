@@ -6,7 +6,7 @@ const navItems = [
   { label: "Thực hành", icon: <Activity size={20} color="#FF6B6B" />, to: "/thuc-hanh" },
   { label: "Bảng xếp hạng", icon: <Shield size={20} color="#4ECDC4" />, to: "/leaderboard" },
   { label: "Cửa hàng", icon: <Store size={20} color="#45B7D1" />, to: "/cua-hang" },
-  { label: "Hồ sơ", icon: <User size={20} color="#9B59B6" />, to: "/ho-so" },
+  { label: "Hồ sơ", icon: <User size={20} color="#9B59B6" />, to: "/profile" },
   { label: "Nhiệm vụ", icon: <Target size={20} color="#F7B731" />, to: "/mission" },
   { label: "Xem thêm", icon: <MoreHorizontal size={20} color="#2ECC71" />, to: "/xem-them" },
 ];
