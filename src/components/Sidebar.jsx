@@ -1,10 +1,11 @@
 import { NavLink } from "react-router-dom";
 import { Home, Activity, Shield, Store, User, MoreHorizontal, Target } from "lucide-react";
+import { IconTrophy } from "@tabler/icons-react";
 
 const navItems = [
   { label: "Học", icon: <Home size={20} color="#4DA8FF" />, to: "/hoc" },
   { label: "Thực hành", icon: <Activity size={20} color="#FF6B6B" />, to: "/thuc-hanh" },
-  { label: "Bảng xếp hạng", icon: <Shield size={20} color="#4ECDC4" />, to: "/leaderboard" },
+  { label: "Bảng xếp hạng", icon: <IconTrophy size={20} color="#4ECDC4" />, to: "/leaderboard" },
   { label: "Cửa hàng", icon: <Store size={20} color="#45B7D1" />, to: "/cua-hang" },
   { label: "Hồ sơ", icon: <User size={20} color="#9B59B6" />, to: "/profile" },
   { label: "Nhiệm vụ", icon: <Target size={20} color="#F7B731" />, to: "/mission" },
