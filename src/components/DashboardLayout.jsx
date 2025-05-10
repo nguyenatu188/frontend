@@ -22,6 +22,7 @@ export default function DashboardLayout() {
           {/* <Route path="/shop" element={<Shop />} /> */}
           <Route path="/profile" element={<Profile />} />
           {/* <Route path="/more" element={<More />} /> */}
+          
         </Routes>
       </div>
       <RightSidebar/>
