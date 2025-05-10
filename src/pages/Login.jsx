@@ -51,8 +51,11 @@ export const Login = () => {
                 onChange={(e) => setInputs({ ...inputs, password: e.target.value })}
                 className="w-full h-full px-5 py-3 text-[#3c3c3c] text-base font-medium rounded-2xl bg-transparent focus:outline-none"
               />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[#afafaf] text-[13px] font-bold cursor-pointer">
-                FORGOT?
+              <div
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#afafaf] text-[13px] font-bold cursor-pointer hover:text-[#1cb0f6] transition"
+                onClick={() => navigate("/forgot-password")}
+              >
+                Forgot?
               </div>
             </div>
           <button className=" w-[375px] h-[47px] bg-[#1cb0f6] rounded-2xl shadow-[0px_4px_0px_#1899d6] font-bold text-white text-[13px] text-center leading-[18px] hover:bg-[#1899d6] transition disabled={loading}">
