@@ -2,181 +2,138 @@ import { useState, useEffect } from 'react';
 
 const base_url = "http://localhost:8000/api";
 
-const useFriendRequests = () => {
-    const [friendRequests, setFriendRequests] = useState([]);
-    const [friendRequestsSent, setFriendRequestsSent] = useState([]);
-    const [friends, setFriends] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+const useFriends = () => {
+  const [friendRequests, setFriendRequests] = useState([]);
+  const [friendRequestsSent, setFriendRequestsSent] = useState([]);
+  const [friends, setFriends] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-    // lấy danh sách lời mời kết bạn
-    const fetchFriendRequests = async () => {
-        try {
-            const token = localStorage.getItem("token");
-            const response = await fetch(`${base_url}/v1/friends/requests/received`, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
+  const fetchFriendRequests = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${base_url}/v1/friends/requests/received`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setFriendRequests(data?.data?.requests || []);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
-            const data = await response.json();
-            const requests = Array.isArray(data?.data?.requests)
-                ? data.data.requests
-                : [];
+  const fetchSentRequests = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${base_url}/v1/friends/requests/sent`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setFriendRequestsSent(data?.data?.requests || []);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
-            setFriendRequests(requests);
-        } catch (err) {
-            setError(err.message);
-        }
-    };
+  const fetchFriends = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${base_url}/v1/friends`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setFriends(data?.data?.friends || []);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
-    // lấy danh sách lời mời đã gửi
-    const fetchSentRequests = async () => {
-        try {
-            const token = localStorage.getItem("token");
-            const response = await fetch(`${base_url}/v1/friends/requests/sent`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
+  const fetchAll = async () => {
+    setLoading(true);
+    await Promise.all([
+      fetchFriendRequests(),
+      fetchSentRequests(),
+      fetchFriends(),
+    ]);
+    setLoading(false);
+  };
 
-            const data = await response.json();
-            const requests = Array.isArray(data?.data?.requests)
-                ? data.data.requests
-                : [];
+  const acceptFriendRequest = async (requestId) => {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${base_url}/v1/friends/requests/${requestId}/accept`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) throw new Error("Chấp nhận lời mời thất bại");
+    await fetchAll();
+  };
 
-            setFriendRequestsSent(requests);
-        } catch (err) {
-            setError(err.message);
-        }
-    };
+  const rejectFriendRequest = async (requestId) => {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${base_url}/v1/friends/requests/${requestId}/reject`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) throw new Error("Từ chối lời mời thất bại");
+    await fetchFriendRequests();
+  };
 
-    // lấy danh sách bạn bè
-    const fetchFriends = async () => {
-        try {
-            const token = localStorage.getItem("token");
-            const response = await fetch(`${base_url}/v1/friends`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
+  const deleteFriend = async (userId) => {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${base_url}/v1/friends/${userId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error("Xóa bạn thất bại");
+    await fetchFriends();
+  };
 
-            const data = await response.json();
-            const friendList = Array.isArray(data?.data?.friends)
-                ? data.data.friends
-                : [];
+  const sendFriendRequest = async (receiverId) => {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${base_url}/v1/friends/requests`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ receiver_id: receiverId }),
+    });
+    if (!res.ok) throw new Error("Gửi lời mời thất bại");
+    await fetchSentRequests();
+  };
 
-            setFriends(friendList);
-        } catch (err) {
-            setError(err.message);
-        }
-    };
+  const revokeSentRequest = async (requestId) => {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${base_url}/v1/friends/requests/${requestId}/cancel`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error("Thu hồi lời mời thất bại");
+    await fetchSentRequests();
+  };
 
-    const fetchAll = async () => {
-        setLoading(true);
-        await Promise.all([
-            fetchFriendRequests(),
-            fetchSentRequests(),
-            fetchFriends()
-        ]);
-        setLoading(false);
-    };
+  const getAllUsers = async () => {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${base_url}/v1/users`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    return data?.data || [];
+  };
 
-    // chấp nhận lời mời kết bạn
-    const acceptFriendRequest = async (requestId) => {
-        const token = localStorage.getItem("token");
-        try {
-            const response = await fetch(`${base_url}/v1/friends/requests/${requestId}/accept`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
+  useEffect(() => { fetchAll(); }, []);
 
-            if (!response.ok) throw new Error("Chấp nhận lời mời thất bại");
-
-            await fetchFriendRequests();
-            await fetchFriends(); // cập nhật danh sách bạn bè
-        } catch (err) {
-            throw err;
-        }
-    };
-
-    // từ chối lời mời kết bạn
-    const rejectFriendRequest = async (requestId) => {
-        const token = localStorage.getItem("token");
-        try {
-            const response = await fetch(`${base_url}/v1/friends/requests/${requestId}/reject`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
-
-            if (!response.ok) throw new Error("Từ chối lời mời thất bại");
-
-            await fetchFriendRequests();
-        } catch (err) {
-            throw err;
-        }
-    };
-
-    // xóa bạn bè
-    const deleteFriend = async (userId) => {
-        const token = localStorage.getItem("token");
-        try {
-            const response = await fetch(`${base_url}/v1/friends/${userId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
-            if (!response.ok) throw new Error("Xóa bạn thất bại");
-            await fetchFriends();
-        } catch (err) {
-            throw err;
-        }
-    };
-    // thu hồi lời mời đã gửi
-    const revokeSentRequest = async (requestId) => {
-        const token = localStorage.getItem("token");
-        try {
-            const response = await fetch(`${base_url}/v1/friends/requests/${requestId}/cancel`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
-
-            if (!response.ok) throw new Error("Thu hồi lời mời thất bại");
-
-            await fetchSentRequests(); // cập nhật lại danh sách
-        } catch (err) {
-            throw err;
-        }
-    };
-
-
-
-    useEffect(() => {
-        fetchAll();
-    }, []);
-
-    return {
-        friendRequests,
-        friendRequestsSent,
-        friends,
-        loading,
-        error,
-        acceptFriendRequest,
-        rejectFriendRequest,
-        deleteFriend,
-        revokeSentRequest,
-        refetchAll: fetchAll,
-    };
+  return {
+    friendRequests,
+    friendRequestsSent,
+    friends,
+    loading,
+    error,
+    getAllUsers,
+    sendFriendRequest,
+    acceptFriendRequest,
+    rejectFriendRequest,
+    deleteFriend,
+    revokeSentRequest,
+    refetchAll: fetchAll,
+  };
 };
 
-export default useFriendRequests;
+export default useFriends;
