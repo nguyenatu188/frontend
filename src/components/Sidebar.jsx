@@ -1,15 +1,15 @@
 import { NavLink } from "react-router-dom";
 import { Home, Activity, Shield, Store, User, MoreHorizontal, Target } from "lucide-react";
-import { useAuthContext } from '../context/AuthContext';
+
+import { IconTrophy } from "@tabler/icons-react";
+import { useAuthContext } from "../context/AuthContext";
 
 const navItems = [
-  { label: "Học", icon: <Home size={20} />, to: "/learn" },
-  { label: "Thực hành", icon: <Activity size={20} />, to: "/practice" },
-  { label: "Bảng xếp hạng", icon: <Shield size={20} />, to: "/ranking" },
-  { label: "Cửa hàng", icon: <Store size={20} />, to: "/shop" },  // Add if you have a Shop page
-  { label: "Hồ sơ", icon: <User size={20} />, to: "/profile" },
-  { label: "Nhiệm vụ", icon: <Target size={20} />, to: "/mission" },
-  { label: "Xem thêm", icon: <MoreHorizontal size={20} />, to: "/more" }, // Add if you have More page
+  { label: "Học", icon: <Home size={20} color="#4DA8FF" />, to: "/learn" },
+  { label: "Bảng xếp hạng", icon: <IconTrophy size={20} color="#4ECDC4" />, to: "/leaderboard" },
+  { label: "Cửa hàng", icon: <Store size={20} color="#45B7D1" />, to: "/cua-hang" },
+  { label: "Nhiệm vụ", icon: <Target size={20} color="#F7B731" />, to: "/mission" },
+  { label: "Hồ sơ", icon: <User size={20} color="#9B59B6" />, to: "/profile" },
 ];
 
 const Sidebar = () => {
@@ -29,7 +29,7 @@ const Sidebar = () => {
             {item.icon}
             <span>
               {item.label}
-              {authUser && item.label === "Hồ sơ" ? " (Chào, " + authUser.name + ")" : ""}
+              {authUser && item.label === "Hồ sơ" ? " (Chào, " + authUser.full_name + ")" : ""}
             </span>
           </NavLink>
         ))}

@@ -1,31 +1,27 @@
 // App.jsx
 import React from 'react'
-import { Navigate, Routes, Route, useLocation } from 'react-router-dom'
+import { Navigate, Routes, Route } from 'react-router-dom'
 import Login from './pages/Login'
 import LandingPage from './pages/LandingPage'
 import Register from './pages/Register'
-import DashboardLayout from './components/DashboardLayout';
 import { useAuthContext } from './context/AuthContext'
+import Profile from './pages/Profile'
+import Learn from './pages/Learn'
 
 function App() {
-  const location = useLocation();
   const { authUser, isLoading } = useAuthContext();
   if (isLoading) return null;
-  const noSidebarPaths = ['/', '/login', '/register'];
-  const isNoSidebar = noSidebarPaths.includes(location.pathname);
+
   return (
     <>
-      {isNoSidebar && !authUser ? (
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login />} />
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/register" element={authUser ? <Navigate to="/learn" /> : <Register />} />
+        <Route path="/login" element={authUser ? <Navigate to="/learn" /> : <Login />} />
+        <Route path="/profile" element={authUser ? <Profile /> : <Navigate to="/login" />} />
+        <Route path="/learn" element={authUser ? <Learn /> : <Navigate to="/login" />} />
+      </Routes>
 
-        </Routes>
-      ) : (
-        <DashboardLayout />
-
-      )}
     </>
   )
 }
