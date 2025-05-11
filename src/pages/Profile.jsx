@@ -9,9 +9,10 @@ const Profile = () => {
   }
 
   return (
-    <div className="flex h-screen">
+    <div className="flex">
       <Sidebar className="fixed"/>
-      <div className="flex-1 p-4">
+      <div className="h-screen w-full flex items-center justify-center bg-gray-50 text-gray-800">
+        
         <button
           onClick={handleLogout}
           disabled={loading}

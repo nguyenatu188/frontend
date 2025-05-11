@@ -17,7 +17,7 @@ const Sidebar = () => {
 
   return (
     <div className="h-screen w-64 bg-white shadow-lg border-r border-blue-100 p-4">
-      <h2 className="text-2xl font-bold text-blue-500 mb-8 text-center">THANH HÓA</h2>
+      <h2 className="text-2xl font-bold text-blue-500 mb-8 text-center">HELL</h2>
       <nav className="flex flex-col gap-2">
         {navItems.map((item, index) => (
           <NavLink
