@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion'; // Import motion from framer-motion
 import Sidebar from '../components/Sidebar';
 
 export function Shop(props) {
@@ -122,8 +123,15 @@ export function Shop(props) {
                                         )}
                                     </div>
 
+                                    {/* Use motion.div for smooth animations */}
                                     {item.showDropdown && (
-                                        <div className="mt-3 flex flex-wrap gap-2">
+                                        <motion.div
+                                            initial={{ height: 0 }}
+                                            animate={{ height: "auto" }}
+                                            exit={{ height: 0 }}
+                                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                            className="mt-3 flex flex-wrap gap-2"
+                                        >
                                             {exampleImages.map((url, index) => (
                                                 <img
                                                     key={index}
@@ -132,7 +140,7 @@ export function Shop(props) {
                                                     className="w-14 h-14 rounded-lg"
                                                 />
                                             ))}
-                                        </div>
+                                        </motion.div>
                                     )}
                                 </div>
                             ))}
