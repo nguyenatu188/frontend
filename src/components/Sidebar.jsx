@@ -7,8 +7,9 @@ import { useAuthContext } from "../context/AuthContext";
 const navItems = [
   { label: "Học", icon: <Home size={20} color="#4DA8FF" />, to: "/learn" },
   { label: "Bảng xếp hạng", icon: <IconTrophy size={20} color="#4ECDC4" />, to: "/leaderboard" },
-  { label: "Cửa hàng", icon: <Store size={20} color="#45B7D1" />, to: "/cua-hang" },
+  { label: "Cửa hàng", icon: <Store size={20} color="#45B7D1" />, to: "/shop" },
   { label: "Nhiệm vụ", icon: <Target size={20} color="#F7B731" />, to: "/mission" },
+  { label: "Điểm danh", icon: <Activity size={20} color="#F9AFAF" />, to: "/checkin" },
   { label: "Hồ sơ", icon: <User size={20} color="#9B59B6" />, to: "/profile" },
 ];
 
