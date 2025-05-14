@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import useLogout from '../hooks/useLogout';
 import useFriends from '../hooks/useFriends';
+import Comment from '../components/Comments'
 
 const Profile = () => {
   const friendsApi = useFriends();
@@ -55,6 +56,7 @@ const Profile = () => {
 
   return (
     <div className="flex h-screen">
+      
       <div className="w-2/3 flex justify-center items-center bg-white border-r">
         <button
           onClick={handleLogout}
@@ -63,6 +65,7 @@ const Profile = () => {
         >
           {logoutLoading ? 'Đang đăng xuất...' : 'Đăng xuất'}
         </button>
+        <Comment />
       </div>
 
       <div className="w-1/3 px-6 pt-20 bg-gray-50 overflow-auto space-y-4">

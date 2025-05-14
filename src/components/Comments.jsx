@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { cmtList } from '../../data/data.js';
+import { cmtList } from '../data/data.js';
 
 const Comment = ({ comment, onReply, allNames }) => {
   const [likes, setLikes] = useState(0);
