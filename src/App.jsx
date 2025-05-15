@@ -7,8 +7,10 @@ import Learn from './pages/Learn'
 import Profile from './pages/Profile'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
+import Shop from './pages/Shop'
 import { useAuthContext } from './context/AuthContext'
 import Missions from './pages/Missions'
+import LeaderBoards  from './pages/LeaderBoards'
 
 function App() {
   const { authUser, isLoading, isRefreshing } = useAuthContext();
@@ -30,6 +32,11 @@ function App() {
         <Route path="/profile" element={authUser ? <Profile /> : <Navigate to="/login" />} />
         <Route path="/learn" element={authUser ? <Learn /> : <Navigate to="/login" />} />
         <Route path="/mission" element={authUser ? <Missions /> : <Navigate to="/login" />} />
+        <Route path="/shop" element={authUser ? <Shop /> : <Navigate to="/login" />} />
+        <Route path="/leaderboard" element={authUser ? <LeaderBoards /> : <Navigate to="/login" />} />
+        
+
+
       </Routes>
     </>
   )
