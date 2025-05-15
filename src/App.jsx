@@ -34,9 +34,6 @@ function App() {
         <Route path="/mission" element={authUser ? <Missions /> : <Navigate to="/login" />} />
         <Route path="/shop" element={authUser ? <Shop /> : <Navigate to="/login" />} />
         <Route path="/leaderboard" element={authUser ? <LeaderBoards /> : <Navigate to="/login" />} />
-        
-
-
       </Routes>
     </>
   )
