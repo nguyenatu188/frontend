@@ -1,8 +1,8 @@
-import { NavLink } from "react-router-dom";
-import { Home, Activity, Shield, Store, User, MoreHorizontal, Target } from "lucide-react";
+import { NavLink } from "react-router-dom"
+import { Home, Activity, Shield, Store, User, MoreHorizontal, Target } from "lucide-react"
 
-import { IconTrophy } from "@tabler/icons-react";
-import { useAuthContext } from "../context/AuthContext";
+import { IconTrophy } from "@tabler/icons-react"
+import { useAuthContext } from "../context/AuthContext"
 
 const navItems = [
   { label: "Học", icon: <Home size={20} color="#4DA8FF" />, to: "/learn" },
@@ -10,13 +10,13 @@ const navItems = [
   { label: "Cửa hàng", icon: <Store size={20} color="#45B7D1" />, to: "/cua-hang" },
   { label: "Nhiệm vụ", icon: <Target size={20} color="#F7B731" />, to: "/mission" },
   { label: "Hồ sơ", icon: <User size={20} color="#9B59B6" />, to: "/profile" },
-];
+]
 
 const Sidebar = () => {
-  const { authUser } = useAuthContext();
+  const { authUser } = useAuthContext()
 
   return (
-    <div className="h-screen w-64 bg-white shadow-lg border-r border-blue-100 p-4">
+    <div className="h-screen w-64 bg-white shadow-lg border-r border-blue-100 p-4 fixed">
       <h2 className="text-2xl font-bold text-blue-500 mb-8 text-center">HELL</h2>
       <nav className="flex flex-col gap-2">
         {navItems.map((item, index) => (
@@ -35,7 +35,7 @@ const Sidebar = () => {
         ))}
       </nav>
     </div>
-  );
-};
+  )
+}
 
-export default Sidebar;
+export default Sidebar

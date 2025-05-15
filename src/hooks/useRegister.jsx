@@ -31,7 +31,6 @@ const useRegister = () => {
 
       // Lưu token + user vào localStorage
       localStorage.setItem("token", data.token)
-      localStorage.setItem("user", JSON.stringify(data.user))
 
       setAuthUser(data.user)
       console.log("Đăng ký thành công!")

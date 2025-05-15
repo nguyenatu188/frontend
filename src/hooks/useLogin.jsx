@@ -22,12 +22,9 @@ const useLogin = () => {
         throw new Error(data.message || "Login failed")
       }
 
+      setAuthUser(data.user)
       // Lưu token vào localStorage
       localStorage.setItem("token", data.token)
-
-      // Lưu user vào context (tuỳ bạn lưu thêm nếu cần)
-      localStorage.setItem("user", JSON.stringify(data.user))
-      setAuthUser(data.user)
     } catch (error) {
       console.error(error.message)
     } finally {

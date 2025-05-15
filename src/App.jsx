@@ -11,13 +11,18 @@ import { useAuthContext } from './context/AuthContext'
 import Missions from './pages/Missions'
 
 function App() {
-  const { authUser, isLoading } = useAuthContext();
-  if (isLoading) return null;
+  const { authUser, isLoading, isRefreshing } = useAuthContext();
+  if (isLoading || isRefreshing) return
+  (
+  <div className="flex justify-center items-center h-screen">
+    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+  </div>
+  )
 
   return (
     <>
       <Routes>
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={authUser ? <Navigate to="/learn" /> : <LandingPage />} />
         <Route path="/register" element={authUser ? <Navigate to="/learn" /> : <Register />} />
         <Route path="/forgot-password" element={ !authUser ? <ForgotPassword/> : <Navigate to="/learn"/> } />
         <Route path="/reset-password" element={ !authUser ? <ResetPassword/> : <Navigate to="/learn"/> } />
@@ -26,7 +31,6 @@ function App() {
         <Route path="/learn" element={authUser ? <Learn /> : <Navigate to="/login" />} />
         <Route path="/mission" element={authUser ? <Missions /> : <Navigate to="/login" />} />
       </Routes>
-
     </>
   )
 }

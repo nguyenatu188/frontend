@@ -30,7 +30,6 @@ const useLogout = () => {
 
       // Xoá localStorage + context
       localStorage.removeItem("token")
-      localStorage.removeItem("user")
       setAuthUser(null)
 
       console.log("Đăng xuất thành công!")
