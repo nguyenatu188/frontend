@@ -1,213 +1,3 @@
-// import React, { useState } from 'react';
-// import { useParams, useNavigate } from 'react-router-dom';
-// import useQuestion from '../hooks/useQuestion';
-// import useUserProgress from '../hooks/useUserProgress';
-
-// const StartExam = () => {
-//   const { lessonId } = useParams();
-//   const navigate = useNavigate();
-//   const parsedLessonId = parseInt(lessonId, 10);
-//   const { data, loading, error } = useQuestion(parsedLessonId || 0);
-//   const { submitAnswer, finalizeLessonProgress, loading: submitLoading, error: submitError } = useUserProgress();
-//   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-//   const [selectedOption, setSelectedOption] = useState(null);
-//   const [isChecked, setIsChecked] = useState(false);
-//   const [isCorrect, setIsCorrect] = useState(null);
-
-//   // Debug: Log lessonId và parsedLessonId khi component render
-//   console.log('StartExam lessonId:', { lessonId, parsedLessonId });
-
-//   // Kiểm tra lessonId không hợp lệ
-//   if (!lessonId || isNaN(parsedLessonId)) {
-//     console.log('Phát hiện lessonId không hợp lệ:', { lessonId, parsedLessonId });
-//     return (
-//       <div className="max-w-2xl mx-auto p-6 text-center text-red-500">
-//         Lỗi: Lesson ID không hợp lệ hoặc thiếu.
-//       </div>
-//     );
-//   }
-
-//   // Hàm xử lý khi kiểm tra đáp án
-//   const handleCheckAnswer = async (e) => {
-//     e.preventDefault();
-//     console.log('Đã gọi handleCheckAnswer:', { selectedOption, currentQuestionIndex });
-
-//     if (!selectedOption) {
-//       console.log('Không có đáp án nào được chọn');
-//       alert('Vui lòng chọn một đáp án!');
-//       return;
-//     }
-
-//     const token = localStorage.getItem('token');
-//     if (!token) {
-//       console.log('Thiếu token');
-//       alert('Token is required');
-//       return;
-//     }
-
-//     try {
-//       const question = data.questions[currentQuestionIndex];
-//       const selectedOptionData = question.options.find(
-//         (option) => option.option_id === selectedOption
-//       );
-//       console.log('Đang gửi đáp án:', {
-//         lessonId: parsedLessonId,
-//         questionId: question.question_id,
-//         selectedOption,
-//       });
-
-//       const response = await submitAnswer(parsedLessonId, question.question_id, selectedOption, token);
-//       const isAnswerCorrect = response?.data?.is_correct ?? selectedOptionData.is_correct === 1;
-
-//       console.log('Kết quả kiểm tra đáp án:', {
-//         isAnswerCorrect,
-//         responseData: response?.data,
-//       });
-
-//       setIsCorrect(isAnswerCorrect);
-//       setIsChecked(true);
-//     } catch (err) {
-//       console.error('Lỗi khi kiểm tra đáp án:', err);
-//       alert('Lỗi khi kiểm tra câu trả lời: ' + err.message);
-//     }
-//   };
-
-//   // Hàm xử lý chuyển sang câu hỏi tiếp theo hoặc hoàn thành bài học
-//   const handleNextQuestion = async () => {
-//     console.log('Đã gọi handleNextQuestion:', {
-//       currentQuestionIndex,
-//       totalQuestions: data.questions.length,
-//     });
-
-//     if (currentQuestionIndex < data.questions.length - 1) {
-//       console.log('Chuyển sang câu hỏi tiếp theo:', currentQuestionIndex + 1);
-//       setCurrentQuestionIndex(currentQuestionIndex + 1);
-//       setSelectedOption(null);
-//       setIsChecked(false);
-//       setIsCorrect(null);
-//     } else {
-//       const token = localStorage.getItem('token');
-//       if (!token) {
-//         console.log('Thiếu token để hoàn thành tiến độ');
-//         alert('Token is required');
-//         return;
-//       }
-
-//       try {
-//         console.log('Đang hoàn thành tiến độ bài học:', { lessonId: parsedLessonId });
-//         await finalizeLessonProgress(parsedLessonId, token);
-//         console.log('Đã hoàn thành tiến độ bài học, chuyển hướng đến /learn');
-//         navigate('/learn');
-//       } catch (err) {
-//         console.error('Lỗi khi hoàn thành bài học:', err);
-//         alert('Lỗi khi hoàn thành bài học: ' + err.message);
-//       }
-//     }
-//   };
-
-//   // Hàm xử lý khi chọn đáp án
-//   const handleOptionChange = (optionId) => {
-//     console.log('Đã thay đổi đáp án:', { optionId });
-//     setSelectedOption(optionId);
-//     setIsChecked(false);
-//     setIsCorrect(null);
-//   };
-
-//   // Kiểm tra trạng thái loading
-//   if (loading) {
-//     console.log('Đang tải câu hỏi...');
-//     return <div className="text-center mt-10 text-black">Đang tải...</div>;
-//   }
-
-//   // Kiểm tra lỗi khi tải câu hỏi
-//   if (error) {
-//     console.error('Lỗi khi tải câu hỏi:', error);
-//     return <div className="text-center mt-10 text-red-500">Lỗi: {error}</div>;
-//   }
-
-//   // Kiểm tra nếu không có câu hỏi
-//   if (!data.questions || data.questions.length === 0) {
-//     console.log('Không có câu hỏi nào cho bài học:', parsedLessonId);
-//     return <div className="text-center mt-10 text-black">Không có câu hỏi nào cho bài học này.</div>;
-//   }
-
-//   const currentQuestion = data.questions[currentQuestionIndex];
-//   const isLastQuestion = currentQuestionIndex === data.questions.length - 1;
-
-//   console.log('Đang hiển thị câu hỏi:', {
-//     questionIndex: currentQuestionIndex,
-//     questionId: currentQuestion.question_id,
-//     isLastQuestion,
-//   });
-
-//   return (
-//     <div className="max-w-2xl mx-auto p-6 text-black">
-//       <h1 className="text-2xl font-bold mb-4">{data.lesson?.title || 'Bài thi'}</h1>
-//       <div className="bg-white shadow-md rounded-lg p-6">
-//         <h2 className="text-xl font-semibold mb-4">
-//           Câu hỏi {currentQuestionIndex + 1}/{data.questions.length}
-//         </h2>
-//         <p className="mb-4">{currentQuestion.question_text}</p>
-//         <form onSubmit={handleCheckAnswer}>
-//           <div className="space-y-2">
-//             {currentQuestion.options.map((option) => (
-//               <label
-//                 key={option.option_id}
-//                 className={`flex items-center space-x-2 ${
-//                   isChecked
-//                     ? option.is_correct
-//                       ? 'text-green-600'
-//                       : selectedOption === option.option_id
-//                         ? 'text-red-600'
-//                         : ''
-//                     : ''
-//                 }`}
-//               >
-//                 <input
-//                   type="radio"
-//                   name="option"
-//                   value={option.option_id}
-//                   checked={selectedOption === option.option_id}
-//                   onChange={() => handleOptionChange(option.option_id)}
-//                   disabled={isChecked || submitLoading}
-//                   className="h-4 w-4 text-blue-600"
-//                 />
-//                 <span>{option.option_text}</span>
-//               </label>
-//             ))}
-//           </div>
-//           {isChecked && (
-//             <p className={`mt-2 ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
-//               {isCorrect ? 'Đúng!' : 'Sai!'} {currentQuestion.explanation}
-//             </p>
-//           )}
-//           {submitError && <p className="text-red-500 mt-2">{submitError}</p>}
-//           <div className="mt-4 flex space-x-4">
-//             <button
-//               type="submit"
-//               disabled={isChecked || submitLoading || !selectedOption}
-//               className="bg-blue-500 text-white px-4 py-2 rounded disabled:bg-gray-400"
-//             >
-//               {submitLoading ? 'Đang kiểm tra...' : 'Kiểm tra'}
-//             </button>
-//             {isChecked && (
-//               <button
-//                 type="button"
-//                 onClick={handleNextQuestion}
-//                 className="bg-green-500 text-white px-4 py-2 rounded"
-//               >
-//                 {isLastQuestion ? 'Hoàn thành bài học' : 'Câu tiếp theo'}
-//               </button>
-//             )}
-//           </div>
-//         </form>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default StartExam;
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { IconXboxX, IconCircleCheck } from '@tabler/icons-react';
@@ -224,8 +14,10 @@ const StartExam = () => {
     const [selectedOption, setSelectedOption] = useState(null);
     const [isChecked, setIsChecked] = useState(false);
     const [isCorrect, setIsCorrect] = useState(null);
+    const [results, setResults] = useState([]); // Lưu kết quả từng câu
+    const [showFloatbox, setShowFloatbox] = useState(false); // Điều khiển floatbox
 
-    // Debug: Log lessonId and parsedLessonId when component renders
+    // Debug: Log lessonId and parsedLessonId
     console.log('StartExam lessonId:', { lessonId, parsedLessonId });
 
     // Check for invalid lessonId
@@ -281,6 +73,16 @@ const StartExam = () => {
                 responseData: response?.data,
             });
 
+            // Lưu kết quả câu hỏi
+            setResults((prev) => [
+                ...prev,
+                {
+                    questionId: question.question_id,
+                    questionText: question.question_text,
+                    isCorrect: isAnswerCorrect,
+                },
+            ]);
+
             setIsCorrect(isAnswerCorrect);
             setIsChecked(true);
         } catch (err) {
@@ -289,7 +91,7 @@ const StartExam = () => {
         }
     };
 
-    // Handle navigation to next question or lesson completion
+    // Handle navigation to next question or show floatbox
     const handleNextQuestion = async () => {
         console.log('handleNextQuestion called:', {
             currentQuestionIndex,
@@ -313,8 +115,8 @@ const StartExam = () => {
             try {
                 console.log('Finalizing lesson progress:', { lessonId: parsedLessonId });
                 await finalizeLessonProgress(parsedLessonId, token);
-                console.log('Lesson progress finalized, navigating to /learn');
-                navigate('/learn');
+                console.log('Showing floatbox with results');
+                setShowFloatbox(true); // Hiển thị floatbox
             } catch (err) {
                 console.error('Error finalizing lesson:', err);
                 alert('Lỗi khi hoàn thành bài học: ' + err.message);
@@ -329,6 +131,11 @@ const StartExam = () => {
         setIsChecked(false);
         setIsCorrect(null);
     };
+
+    // Calculate results for floatbox
+    const correctCount = results.filter((result) => result.isCorrect).length;
+    const totalQuestions = data.questions.length;
+    const score = (correctCount / totalQuestions) * 100; // Điểm tính theo phần trăm
 
     // Check loading state
     if (loading) {
@@ -428,8 +235,8 @@ const StartExam = () => {
                         className={`flex items-center justify-center text-lg ${isCorrect ? 'text-green-600' : 'text-red-600'
                             }`}
                     >
-                        <span className="mr-2">
-                            {isCorrect ? <IconCircleCheck stroke={2} size={35} /> : <IconXboxX stroke={2} size={35} />}
+                        <span className="mr-2 w-6 h-6">
+                            {isCorrect ? <IconCircleCheck stroke={2} /> : <IconXboxX stroke={2} />}
                         </span>
                         {currentQuestion.explanation}
                     </p>
@@ -456,6 +263,50 @@ const StartExam = () => {
                     )}
                 </div>
             </footer>
+
+            {/* Floatbox */}
+            {showFloatbox && (
+                <div className="fixed inset-0 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg border border-gray-200">
+                        <h2 className="text-2xl font-bold text-center mb-4">Kết quả bài thi</h2>
+                        <div className="text-center mb-4">
+                            <p className="text-lg">Số câu đúng: {correctCount}/{totalQuestions}</p>
+                            <p className="text-lg">Điểm: {score.toFixed(2)}/100</p>
+                        </div>
+                        <div className="max-h-60 overflow-y-auto mb-4">
+                            <h3 className="text-lg font-semibold mb-2">Chi tiết câu hỏi:</h3>
+                            <ul className="space-y-2">
+                                {results.map((result, index) => (
+                                    <li
+                                        key={result.questionId}
+                                        className={`flex items-center ${result.isCorrect ? 'text-green-600' : 'text-red-600'
+                                            }`}
+                                    >
+                                        <span className="mr-2">
+                                            {result.isCorrect ? (
+                                                <IconCircleCheck stroke={2} size={20} />
+                                            ) : (
+                                                <IconXboxX stroke={2} size={20} />
+                                            )}
+                                        </span>
+                                        <span>
+                                            Câu {index + 1}: {result.questionText}
+                                        </span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                        <div className="flex justify-center">
+                            <button
+                                onClick={() => navigate('/learn')}
+                                className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                            >
+                                Đóng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
