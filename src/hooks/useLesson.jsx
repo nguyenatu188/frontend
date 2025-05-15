@@ -16,7 +16,7 @@ const useLesson = (category) => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch data');
+        throw new Error('Chưa có bài học nào cho danh mục này');
       }
 
       const result = await response.json();
