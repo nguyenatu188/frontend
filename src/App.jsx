@@ -12,6 +12,7 @@ import { useAuthContext } from './context/AuthContext'
 import Missions from './pages/Missions'
 import LeaderBoards  from './pages/LeaderBoards'
 import CheckIn from './pages/CheckIn'
+import StartExam from './pages/StartExam'
 
 function App() {
   const { authUser, isLoading, isRefreshing } = useAuthContext();
@@ -36,6 +37,7 @@ function App() {
         <Route path="/checkin" element={authUser ? <CheckIn /> : <Navigate to="/login" />} />
         <Route path="/shop" element={authUser ? <Shop /> : <Navigate to="/login" />} />
         <Route path="/leaderboard" element={authUser ? <LeaderBoards /> : <Navigate to="/login" />} />
+        <Route path="/lesson/:lessonId/questions" element={ authUser ? <StartExam /> : <Navigate to="/login" />} />
       </Routes>
     </>
   )
