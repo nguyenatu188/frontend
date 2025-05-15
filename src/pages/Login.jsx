@@ -7,8 +7,8 @@ export const Login = () => {
   const navigate = useNavigate()
 
   const [ inputs, setInputs ] = useState({
-		email: "",
-		password: "",
+		email: "anh1234@gmail.com",
+		password: "123456",
 	})
 
   const { loading, login } = useLogin()
