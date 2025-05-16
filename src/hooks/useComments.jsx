@@ -1,64 +1,57 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const base_url = "http://localhost:8000/api";
 
-const useComments = (lessonId = 3) => {
-    const [comments, setComments] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+const useComments = (lessonId) => {
+  const [comments, setComments] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    const fetchComments = async () => {
-        setLoading(true);
-        try {
-            const token = localStorage.getItem("token");
-            const res = await fetch(`${base_url}/v1/lessons/${lessonId}/comments`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            const data = await res.json();
-            setComments(data?.cmtList || []);
-        } catch (err) {
-            setError(err.message || "Lỗi khi tải bình luận");
-        } finally {
-            setLoading(false);
-        }
-    };
+  const fetchComments = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${base_url}/v1/lessons/${lessonId}/comments`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setComments(data.cmtList || []);
+    } catch (error) {
+      console.error("Lỗi khi lấy bình luận:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const addComment = async (content, parentId = null, name = "Unknown User") => {
-        try {
-            const token = localStorage.getItem("token");
+  const addComment = async (content, parentId = null, name) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${base_url}/v1/lessons/${lessonId}/comments`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          content,
+          parent_id: parentId
+        })
+      });
 
-            const res = await fetch(`http://localhost:8000/api/v1/lessons/3/comments`, {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    content,
-                    parent_id: parentId,
-                    name,
-                }),
-            });
+      if (!res.ok) throw new Error("Gửi bình luận thất bại");
+      await fetchComments();
+    } catch (error) {
+      console.error("Lỗi khi gửi bình luận:", error);
+    }
+  };
 
-            if (!res.ok) throw new Error("Gửi bình luận thất bại");
+  useEffect(() => {
+    fetchComments();
+  }, [lessonId]);
 
-            await fetchComments(); // Load lại danh sách sau khi thêm
-        } catch (err) {
-            console.error("❌ Lỗi khi thêm bình luận:", err.message);
-        }
-    };
-
-    useEffect(() => {
-        fetchComments();
-    }, [lessonId]);
-
-    return {
-        comments,
-        loading,
-        error,
-        addComment,
-        refetchComments: fetchComments,
-    };
+  return {
+    comments,
+    loading,
+    addComment,
+  };
 };
 
 export default useComments;

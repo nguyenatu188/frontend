@@ -1,39 +1,46 @@
-import React, { useState } from 'react';
-import useLogout from '../hooks/useLogout';
-import useFriends from '../hooks/useFriends';
-import Comment from '../components/Comments'
+import { useState } from 'react'
+import useLogout from '../hooks/useLogout'
+import useFriends from '../hooks/useFriends'
+import Sidebar from '../components/Sidebar'
+import RightSidebar from '../components/RightSidebar'
+import { useAuthContext } from '../context/AuthContext'
+import { IoMale, IoFemale, IoMaleFemale } from "react-icons/io5"
+// import useAvatarUpload from '../hooks/useAvatarUpload'
+import { FiUploadCloud } from "react-icons/fi"
 
 const Profile = () => {
-  const friendsApi = useFriends();
-  const [showSearchPopup, setShowSearchPopup] = useState(false);
-  const [allUsers, setAllUsers] = useState([]);
-  const [searchInput, setSearchInput] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
-  const [activeTab, setActiveTab] = useState('sent');
-  const { logout, loading: logoutLoading } = useLogout();
+  const friendsApi = useFriends()
+  const [showSearchPopup, setShowSearchPopup] = useState(false)
+  const [allUsers, setAllUsers] = useState([])
+  const [searchInput, setSearchInput] = useState("")
+  const [searchResults, setSearchResults] = useState([])
+  const [activeTab, setActiveTab] = useState('sent')
+  const { logout, loading: logoutLoading } = useLogout()
+  const { authUser } = useAuthContext()
+  // const { uploadAvatar, isUploading: avatarUploading, error: avatarError } = useAvatarUpload()
 
-  const handleLogout = () => logout();
+  const handleLogout = () => logout()
 
   const openSearchPopup = async () => {
     try {
-      const users = await friendsApi.getAllUsers();
-      setAllUsers(users);
-      setShowSearchPopup(true);
+      const users = await friendsApi.getAllUsers()
+      setAllUsers(users)
+      setShowSearchPopup(true)
     } catch (err) {
-      console.error("Lỗi khi tải danh sách người dùng:", err);
+      console.error("Lỗi khi tải danh sách người dùng:", err)
     }
-  };
+  }
 
   const renderUserStatus = (user) => {
-    const isFriend = friendsApi.friends.some(f => f.user_id === user.user_id);
-    if (isFriend) return <span className="text-sm text-gray-400">Bạn bè</span>;
+    const isFriend = friendsApi.friends.some(f => f.user_id === user.user_id)
+    if (isFriend) return <span className="text-sm text-gray-400">Bạn bè</span>
 
-    const hasSent = friendsApi.friendRequestsSent.some(r => r.receiver?.user_id === user.user_id);
-    if (hasSent) return <span className="text-sm text-blue-500">Đã gửi lời mời</span>;
+    const hasSent = friendsApi.friendRequestsSent.some(r => r.receiver?.user_id === user.user_id)
+    if (hasSent) return <span className="text-sm text-blue-500">Đã gửi lời mời</span>
 
-    const hasReceived = friendsApi.friendRequests.some(r => r.sender?.user_id === user.user_id);
+    const hasReceived = friendsApi.friendRequests.some(r => r.sender?.user_id === user.user_id)
     if (hasReceived) {
-      const requestId = friendsApi.friendRequests.find(r => r.sender?.user_id === user.user_id)?.request_id;
+      const requestId = friendsApi.friendRequests.find(r => r.sender?.user_id === user.user_id)?.request_id
       return (
         <button
           className="text-sm text-green-600 hover:underline"
@@ -41,7 +48,7 @@ const Profile = () => {
         >
           Chấp nhận
         </button>
-      );
+      )
     }
 
     return (
@@ -51,23 +58,137 @@ const Profile = () => {
       >
         Kết bạn
       </button>
-    );
-  };
+    )
+  }
 
   return (
-    <div className="flex h-screen">
-      
-      <div className="w-2/3 flex justify-center items-center bg-white border-r">
+    <div className="flex">
+      <Sidebar/>
+      <RightSidebar />
+      <div className="h-screen w-full flex flex-col justify-between items-center bg-white border-r pl-64">
+        {/* Avatar Section */}
+        {authUser && (
+          <div className="flex flex-col items-center gap-5 mt-5">
+            <div className="relative group">
+              {authUser.avatar === 'default-avatar.png' ? (
+                <div className="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center text-2xl font-semibold text-white cursor-pointer hover:opacity-80 transition-opacity">
+                  {authUser.full_name 
+                    ? authUser.full_name.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase()
+                    : authUser.username[0].toUpperCase()}
+                </div>
+              ) : (
+                <img
+                  src={`http://127.0.0.1:8000/storage/avatars/${authUser.avatar}`}
+                  alt="Avatar"
+                  className="w-24 h-24 rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                />
+              )}
+              
+              {/* Upload overlay */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                <FiUploadCloud className="text-white text-xl mb-1" />
+                <span className="text-white text-xs text-center">Đổi avatar</span>
+              </div>
+
+              <input
+                type="file"
+                accept="image/jpeg, image/png, image/jpg, image/gif"
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  
+                  try {
+                    await uploadAvatar(file);
+                  } catch (err) {
+                    console.error('Upload error:', err);
+                    // Hiển thị thông báo lỗi cho người dùng
+                    alert(`Upload thất bại: ${err.message}`);
+                  }
+                }}
+                // disabled={avatarUploading}
+              />
+            </div>
+
+            {/* {avatarUploading && (
+              <p className="text-sm text-blue-500 mt-2">Đang tải lên...</p>
+            )}
+
+            {avatarError && (
+              <p className="text-sm text-red-500 mt-2">{avatarError}</p>
+            )} */}
+
+            {/* Thống tin người dùng */}
+            <div className="text-center">
+              <p className="text-3xl font-semibold text-blue-400">{authUser.full_name || authUser.username}</p>
+              <div className="flex items-center justify-center gap-2">
+                <p className="text-xl text-gray-500">@{authUser.username}</p>
+                {/* Hiển thị icon giới tính */}
+                {authUser.gender === 'male' ? (
+                  <IoMale className="text-blue-500 text-lg" />
+                ) : authUser.gender === 'female' ? (
+                  <IoFemale className="text-pink-500 text-lg" />
+                ) : (
+                  <IoMaleFemale className="text-purple-500 text-lg" />
+                )}
+              </div>
+              
+              <p className="text-lg text-gray-500">{authUser.email}</p>
+              
+              <p className="text-lg text-gray-500">
+                Bắt đầu học từ: {new Date(authUser.created_at).toLocaleDateString('vi-VN', {
+                  month: '2-digit',
+                  year: 'numeric'
+                })}
+              </p>
+            </div>
+
+            <div className="divider divider-info"></div>
+
+            {/* Thêm phần stats grid ở đây */}
+            <div className="w-full px-8 grid grid-cols-2 gap-4">
+              {/* Current Streak */}
+              <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                <h3 className="text-sm text-gray-500 mb-1">Current Streak</h3>
+                <p className="text-2xl font-bold text-blue-600">{authUser.current_streak} 🔥</p>
+              </div>
+
+              {/* Longest Streak */}
+              <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                <h3 className="text-sm text-gray-500 mb-1">Longest Streak</h3>
+                <p className="text-2xl font-bold text-purple-600">{authUser.longest_streak} 🏆</p>
+              </div>
+
+              {/* Coming Soon 1 */}
+              <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center">
+                <span className="text-gray-400 text-sm">Coming soon...</span>
+              </div>
+
+              {/* Coming Soon 2 */}
+              <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center">
+                <span className="text-gray-400 text-sm">Coming soon...</span>
+              </div>
+            </div>
+
+            <div className="divider divider-info"></div>
+
+            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center">
+              <span className="text-gray-400 text-sm">Linh vật</span>
+            </div>
+            
+          </div>
+        )}
+        
         <button
           onClick={handleLogout}
           disabled={logoutLoading}
-          className="px-6 py-3 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50"
+          className="px-6 py-3 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50 mb-5"
         >
           {logoutLoading ? 'Đang đăng xuất...' : 'Đăng xuất'}
         </button>
-        <Comment />
       </div>
 
+      {/* 1/3 phải */}
       <div className="w-1/3 px-6 pt-20 bg-gray-50 overflow-auto space-y-4">
         <div className="bg-white rounded-lg shadow-sm">
           <div className="flex border-b">
@@ -157,15 +278,15 @@ const Profile = () => {
               placeholder="Nhập username..."
               value={searchInput}
               onChange={(e) => {
-                const val = e.target.value;
-                setSearchInput(val);
+                const val = e.target.value
+                setSearchInput(val)
                 setSearchResults(
                   val.trim() === ""
                     ? []
                     : allUsers.filter(u =>
                         u.username.toLowerCase().includes(val.toLowerCase())
                       )
-                );
+                )
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
@@ -173,7 +294,7 @@ const Profile = () => {
                     allUsers.filter(u =>
                       u.username.toLowerCase().includes(searchInput.toLowerCase())
                     )
-                  );
+                  )
                 }
               }}
             />
@@ -184,7 +305,7 @@ const Profile = () => {
                   allUsers.filter(u =>
                     u.username.toLowerCase().includes(searchInput.toLowerCase())
                   )
-                );
+                )
               }}
             >
               Tìm
@@ -206,7 +327,7 @@ const Profile = () => {
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default Profile;
+export default Profile
