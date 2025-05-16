@@ -1,8 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import useComments from '../hooks/useComments';
-
-const user = JSON.parse(localStorage.getItem("user"));
-const currentUserName = user?.name || "Unknown User";
 
 const CommentItem = ({ comment, onReply, allNames }) => {
   const [likes, setLikes] = useState(0);
@@ -47,7 +44,7 @@ const CommentItem = ({ comment, onReply, allNames }) => {
     <div className="ml-5 mt-4">
       <div className="flex items-start gap-3">
         <img
-          src={`https://i.pravatar.cc/40?u=${comment.name || "Unknown User"}`}
+          src={`https://i.pravatar.cc/40?u=${comment.name || 'Unknown'}`}
           alt="avatar"
           className="w-10 h-10 rounded-full object-cover"
         />
@@ -78,10 +75,7 @@ const CommentItem = ({ comment, onReply, allNames }) => {
             >
               👎 {dislikes}
             </button>
-            <button
-              onClick={() => setShowReply(true)}
-              className="hover:underline"
-            >
+            <button onClick={() => setShowReply(true)} className="hover:underline">
               💬 Trả lời
             </button>
           </div>
@@ -132,10 +126,33 @@ const CommentItem = ({ comment, onReply, allNames }) => {
 const Comments = () => {
   const { comments, loading, addComment } = useComments(3);
   const [newComment, setNewComment] = useState('');
+  const [userName, setUserName] = useState('Unknown');
+
+  // 👇 Gọi API lấy profile từ token
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('http://localhost:8000/api/v1/user/profile', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await res.json();
+        if (res.ok && data.user?.name) {
+          setUserName(data.user.name);
+        }
+      } catch (err) {
+        console.error('Không lấy được user profile:', err.message);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   const handleAddComment = () => {
     if (newComment.trim()) {
-      addComment(newComment, null);
+      addComment(newComment, null, userName); // truyền name vào
       setNewComment('');
     }
   };
@@ -155,10 +172,9 @@ const Comments = () => {
 
   return (
     <div className="max-w-2xl mx-auto">
-      {/* Ô nhập bình luận */}
       <div className="flex items-center gap-3 mb-5 p-4 border border-gray-200 rounded-lg bg-white shadow-sm">
         <img
-          src={`https://i.pravatar.cc/40?u=${currentUserName}`}
+          src={`https://i.pravatar.cc/40?u=${userName}`}
           alt="avatar"
           className="w-10 h-10 rounded-full object-cover"
         />
@@ -178,7 +194,6 @@ const Comments = () => {
         </button>
       </div>
 
-      {/* Danh sách bình luận */}
       {loading ? (
         <p className="text-center text-gray-500">Đang tải bình luận...</p>
       ) : comments.length === 0 ? (
@@ -188,7 +203,7 @@ const Comments = () => {
           <CommentItem
             key={comment.id}
             comment={comment}
-            onReply={addComment}
+            onReply={(content, parentId) => addComment(content, parentId, userName)}
             allNames={allNames}
           />
         ))
