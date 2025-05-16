@@ -7,6 +7,7 @@ import RightSidebar from "../components/RightSidebar";
 import '../index.css';
 
 const Learn = () => {
+  const navigate = useNavigate();
   const [category, setCategory] = useState("Reading");
   const [lessons, setLessons] = useState([]);
   const [showFloatbox, setShowFloatbox] = useState(false);
@@ -14,7 +15,6 @@ const Learn = () => {
   const lessonRefs = useRef([]);
   const { data, loading, error } = useLesson(category);
   const { startLesson } = useUserProgress();
-  const navigate = useNavigate();
 
   // Log category changes
   useEffect(() => {
@@ -86,6 +86,7 @@ const Learn = () => {
   const handleReviewSubmission = () => {
     if (selectedLesson) {
       console.log("Reviewing submission for lesson:", selectedLesson);
+      navigate("/review");
       setShowFloatbox(false);
     }
   };

@@ -13,9 +13,10 @@ import Missions from './pages/Missions'
 import LeaderBoards  from './pages/LeaderBoards'
 import CheckIn from './pages/CheckIn'
 import StartExam from './pages/StartExam'
+import Review from './pages/Review'
 
 function App() {
-  const { authUser, isLoading, isRefreshing } = useAuthContext();
+  const { authUser, isLoading, isRefreshing } = useAuthContext()
   if (isLoading || isRefreshing) return
   (
   <div className="flex justify-center items-center h-screen">
@@ -38,9 +39,10 @@ function App() {
         <Route path="/shop" element={authUser ? <Shop /> : <Navigate to="/login" />} />
         <Route path="/leaderboard" element={authUser ? <LeaderBoards /> : <Navigate to="/login" />} />
         <Route path="/lesson/:lessonId/questions" element={ authUser ? <StartExam /> : <Navigate to="/login" />} />
+        <Route path="/review" element={ authUser ? <Review /> : <Navigate to="/login" />} />
       </Routes>
     </>
   )
 }
 
-export default App;
+export default App

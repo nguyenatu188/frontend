@@ -1,19 +1,19 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { cmtList } from '../data/data.js';
+import React, { useState, useRef, useEffect } from 'react'
+import { cmtList } from '../data/data.js'
 
 const Comment = ({ comment, onReply, allNames }) => {
-  const [likes, setLikes] = useState(0);
-  const [dislikes, setDislikes] = useState(0);
-  const [userReacted, setUserReacted] = useState(null);
-  const [showReply, setShowReply] = useState(false);
-  const [replyContent, setReplyContent] = useState('');
-  const replyInputRef = useRef(null);
+  const [likes, setLikes] = useState(0)
+  const [dislikes, setDislikes] = useState(0)
+  const [userReacted, setUserReacted] = useState(null)
+  const [showReply, setShowReply] = useState(false)
+  const [replyContent, setReplyContent] = useState('')
+  const replyInputRef = useRef(null)
 
   useEffect(() => {
     if (showReply && replyInputRef.current) {
-      replyInputRef.current.focus();
+      replyInputRef.current.focus()
     }
-  }, [showReply]);
+  }, [showReply])
 
   const handleReply = () => {
     if (replyContent.trim()) {
@@ -23,35 +23,35 @@ const Comment = ({ comment, onReply, allNames }) => {
         content: `@${comment.name} ${replyContent}`,
         time: "Vừa xong",
         replies: []
-      });
-      setReplyContent('');
-      setShowReply(false);
+      })
+      setReplyContent('')
+      setShowReply(false)
     }
-  };
+  }
 
   const renderContent = (content) => {
-    const words = content.split(/(\s+)/); // Giữ khoảng trắng
+    const words = content.split(/(\s+)/) // Giữ khoảng trắng
     return words.map((word, i) => {
       if (word.startsWith("@")) {
-        const nameOnly = word.slice(1);
+        const nameOnly = word.slice(1)
         if (allNames.includes(nameOnly)) {
           return (
             <span key={i} style={{ color: '#007bff', fontWeight: 'bold' }}>
               {word}
             </span>
-          );
+          )
         }
       }
-      return word;
-    });
-  };
+      return word
+    })
+  }
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
-      e.preventDefault();
-      handleReply();
+      e.preventDefault()
+      handleReply()
     }
-  };
+  }
 
   return (
     <div style={{ marginLeft: '20px', marginTop: '10px' }}>
@@ -68,20 +68,20 @@ const Comment = ({ comment, onReply, allNames }) => {
           <div style={{ display: 'flex', gap: '10px', fontSize: '14px' }}>
             <button
               onClick={() => {
-                if (userReacted === 'like') return;
-                if (userReacted === 'dislike') setDislikes(dislikes - 1);
-                setLikes(likes + 1);
-                setUserReacted('like');
+                if (userReacted === 'like') return
+                if (userReacted === 'dislike') setDislikes(dislikes - 1)
+                setLikes(likes + 1)
+                setUserReacted('like')
               }}
             >
               👍 {likes}
             </button>
             <button
               onClick={() => {
-                if (userReacted === 'dislike') return;
-                if (userReacted === 'like') setLikes(likes - 1);
-                setDislikes(dislikes + 1);
-                setUserReacted('dislike');
+                if (userReacted === 'dislike') return
+                if (userReacted === 'like') setLikes(likes - 1)
+                setDislikes(dislikes + 1)
+                setUserReacted('dislike')
               }}
             >
               👎 {dislikes}
@@ -122,36 +122,36 @@ const Comment = ({ comment, onReply, allNames }) => {
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
 const Comments = () => {
-  const [comments, setComments] = useState(cmtList);
+  const [comments, setComments] = useState(cmtList)
 
   const handleReply = (parentId, newReply) => {
     const addReply = (list) =>
       list.map(item => {
         if (item.id === parentId) {
-          return { ...item, replies: [...item.replies, newReply] };
+          return { ...item, replies: [...item.replies, newReply] }
         }
-        return { ...item, replies: addReply(item.replies || []) };
-      });
+        return { ...item, replies: addReply(item.replies || []) }
+      })
 
-    setComments(prev => addReply(prev));
-  };
+    setComments(prev => addReply(prev))
+  }
 
   const getAllNames = (list) => {
-    let names = [];
+    let names = []
     list.forEach(item => {
-      names.push(item.name);
+      names.push(item.name)
       if (item.replies && item.replies.length > 0) {
-        names = names.concat(getAllNames(item.replies));
+        names = names.concat(getAllNames(item.replies))
       }
-    });
-    return names;
-  };
+    })
+    return names
+  }
 
-  const allNames = getAllNames(comments);
+  const allNames = getAllNames(comments)
 
   return (
     <div>
@@ -159,7 +159,7 @@ const Comments = () => {
         <Comment key={comment.id} comment={comment} onReply={handleReply} allNames={allNames} />
       ))}
     </div>
-  );
-};
+  )
+}
 
-export default Comments;
+export default Comments
