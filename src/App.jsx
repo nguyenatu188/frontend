@@ -9,6 +9,7 @@ import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import { useAuthContext } from './context/AuthContext'
 import Missions from './pages/Missions'
+import Comment from './components/Comments'
 
 function App() {
   const { authUser, isLoading } = useAuthContext();
@@ -24,6 +25,7 @@ function App() {
         <Route path="/login" element={authUser ? <Navigate to="/learn" /> : <Login />} />
         <Route path="/profile" element={authUser ? <Profile /> : <Navigate to="/login" />} />
         <Route path="/learn" element={authUser ? <Learn /> : <Navigate to="/login" />} />
+        <Route path="/comment" element={authUser ? <Comment /> : <Navigate to="/login" />} />
         <Route path="/mission" element={authUser ? <Missions /> : <Navigate to="/login" />} />
       </Routes>
 
