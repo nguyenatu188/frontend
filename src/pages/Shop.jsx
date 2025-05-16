@@ -3,13 +3,13 @@ import { motion } from 'framer-motion';
 import Sidebar from '../components/Sidebar';
 import { useAuthContext } from '../context/AuthContext';
 
-export function Shop(props) {
-    const { authUser } = useAuthContext();
-    const coins = authUser?.coins || 0;
+export function Shop() {
+    const { authUser, setAuthUser } = useAuthContext();
 
     const [lives, setLives] = useState([
-        { id: 1, name: "Extra Life", price: 100, icon: "❤️", quantity: 0 }, // ✅ đổi bought thành quantity
+        { id: 1, name: "Extra Life", price: 100, icon: "❤️", count: 0 }, // Thêm count
     ]);
+
     const [pets, setPets] = useState([
         { id: 2, name: "Lion", price: 200, icon: "🦁", bought: false, showDropdown: false },
         { id: 3, name: "Snake", price: 250, icon: "🐍", bought: false, showDropdown: false },
@@ -21,7 +21,7 @@ export function Shop(props) {
     ]);
 
     const handleBuy = (id, price, name, type) => {
-        if (coins < price) {
+        if (authUser.coins < price) {
             alert("Not enough coins!");
             return;
         }
@@ -29,21 +29,25 @@ export function Shop(props) {
         const confirmed = window.confirm(`Are you sure you want to buy "${name}" for ${price} coins?`);
         if (!confirmed) return;
 
+        // Trừ coins
+        setAuthUser(prev => ({
+            ...prev,
+            coins: prev.coins - price
+        }));
+
         if (type === "life") {
             setLives(prev =>
                 prev.map(item =>
-                    item.id === id ? { ...item, quantity: item.quantity + 1 } : item
+                    item.id === id ? { ...item, count: item.count + 1 } : item
                 )
             );
         } else {
             setPets(prev =>
                 prev.map(item =>
-                    item.id === id && !item.bought ? { ...item, bought: true } : item
+                    item.id === id ? { ...item, bought: true } : item
                 )
             );
         }
-
-        // ⚠️ Không trừ coins ở đây vì coins đang lấy từ authUser
     };
 
     const toggleDropdown = (id) => {
@@ -70,7 +74,9 @@ export function Shop(props) {
                     <h2 className="text-2xl font-bold text-green-600 mb-4 text-center">Shopping</h2>
                     <h3 className="text-center text-gray-600 mb-4">Mọi điều bạn cần đều có ở đây 😊</h3>
 
-                    <p className="text-center font-semibold text-purple-500 mb-4">Your Coins: {coins}</p>
+                    <p className="text-center font-semibold text-purple-500 mb-4">
+                        Your Coins: {authUser.coins}
+                    </p>
 
                     <div className="mb-6">
                         <h4 className="text-lg font-semibold mb-2">❤️ Lives</h4>
@@ -81,9 +87,9 @@ export function Shop(props) {
                                     className="border border-gray-300 rounded-lg px-4 py-2 flex justify-between items-center"
                                 >
                                     <div>{item.icon} {item.name}</div>
-                                    <div className="flex items-center gap-2">
-                                        {item.quantity > 0 && (
-                                            <span className="text-sm text-green-600">x{item.quantity}</span>
+                                    <div className="flex items-center gap-3">
+                                        {item.count > 0 && (
+                                            <span className="text-blue-500 font-semibold">x{item.count}</span>
                                         )}
                                         <button
                                             className="text-sm bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
