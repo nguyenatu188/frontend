@@ -6,28 +6,32 @@ const useCheckIn = () => {
   const [error, setError] = useState(null);
 
   const fetchCheckInDateHistory = async (token) => {
-    try {
-      const response = await fetch('http://localhost:8000/api/v1/check-in/datehistory', {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+  try {
+    const response = await fetch('http://localhost:8000/api/v1/check-in/datehistory', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-      if (!response.ok) {
-        throw new Error('Lấy lịch sử điểm danh thất bại');
-      }
-
-      const result = await response.json();
-
-      // result là mảng các chuỗi ngày dạng "yyyy-MM-dd"
-      setCheckedInDates(result);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+    if (!response.ok) {
+      throw new Error('Lấy lịch sử điểm danh thất bại');
     }
-  };
+
+    const result = await response.json();
+    if (result.success && Array.isArray(result.data)) {
+      const dates = result.data.map(item => item.checkin_date); // yyyy-MM-dd
+      setCheckedInDates(dates);
+    } else {
+      setCheckedInDates([]); // không có ngày điểm danh nào
+    }
+  } catch (err) {
+    setError('Không thể tải dữ liệu điểm danh');
+    setCheckedInDates([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     const token = localStorage.getItem('token');

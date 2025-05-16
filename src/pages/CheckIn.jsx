@@ -20,25 +20,43 @@ export function Checkin() {
   const hasCheckedInToday = checkedInDates.includes(todayStr);
 
   const handleCheckIn = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
+  const token = localStorage.getItem('token');
+  if (!token) return;
 
-    try {
-      const response = await fetch('http://localhost:8000/api/v1/check-in', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+  try {
+    const response = await fetch('http://localhost:8000/api/v1/check-in', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-      if (!response.ok) throw new Error('Điểm danh thất bại');
-
-      setIsCheckedIn(true);
-      setCheckedInDates(prev => [...prev, todayStr]); // Cập nhật ngày điểm danh ngay
-    } catch (err) {
-      alert(err.message);
+    if (!response.ok) {
+      // Cố gắng lấy message lỗi từ backend
+      let errMsg = 'Điểm danh thất bại';
+      try {
+        const errData = await response.json();
+        errMsg = errData.message || errMsg;
+      } catch {
+        // Nếu json parse lỗi thì giữ message mặc định
+      }
+      throw new Error(errMsg);
     }
-  };
+
+    // Thêm ngày hôm nay vào danh sách nếu chưa có
+    setIsCheckedIn(true);
+    setCheckedInDates((prev) => {
+      if (!prev.includes(todayStr)) {
+        return [...prev, todayStr];
+      }
+      return prev;
+    });
+
+  } catch (err) {
+    alert(err.message);
+  }
+};
+
 
   const monthStart = startOfMonth(today);
   const monthEnd = endOfMonth(monthStart);
@@ -103,7 +121,9 @@ export function Checkin() {
             ))}
           </div>
 
-          {error && <div className="text-red-500 font-medium mb-4">{error}</div>}
+          {error && checkedInDates.length === 0 && (
+            <div className="text-red-500 font-medium mb-4">{error}</div>
+          )}
 
           {loading ? (
             <div className="text-gray-500">Đang tải lịch sử điểm danh...</div>
