@@ -27,7 +27,12 @@ const Sidebar = () => {
             className={({ isActive }) =>
               `flex items-center gap-3 px-4 py-2 rounded-xl transition-all 
               ${isActive ? "bg-blue-50 text-blue-500 font-semibold border border-blue-200" : "text-gray-600 hover:bg-gray-100"}`}>
+              ${isActive ? "bg-blue-50 text-blue-500 font-semibold border border-blue-200" : "text-gray-600 hover:bg-gray-100"}`}>
             {item.icon}
+            <span>
+              {item.label}
+              {authUser && item.label === "Hồ sơ" ? " (Chào, " + authUser.full_name + ")" : ""}
+            </span>
             <span>
               {item.label}
               {authUser && item.label === "Hồ sơ" ? " (Chào, " + authUser.full_name + ")" : ""}
