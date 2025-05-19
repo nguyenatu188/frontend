@@ -1,106 +1,105 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import useLesson from "../hooks/useLesson";
-import useUserProgress from "../hooks/useUserProgress";
-import Sidebar from "../components/Sidebar";
-import RightSidebar from "../components/RightSidebar";
-import '../index.css';
+import { useEffect, useRef, useState } from "react"
+import { useNavigate } from "react-router-dom"
+import useLesson from "../hooks/useLesson"
+import useUserProgress from "../hooks/useUserProgress"
+import Sidebar from "../components/Sidebar"
+import RightSidebar from "../components/RightSidebar"
+import '../index.css'
 
 const Learn = () => {
-  const navigate = useNavigate();
-  const [category, setCategory] = useState("Reading");
-  const [lessons, setLessons] = useState([]);
-  const [showFloatbox, setShowFloatbox] = useState(false);
-  const [selectedLesson, setSelectedLesson] = useState(null);
-  const lessonRefs = useRef([]);
-  const { data, loading, error } = useLesson(category);
-  const { startLesson } = useUserProgress();
+  const navigate = useNavigate()
+  const [category, setCategory] = useState("Reading")
+  const [lessons, setLessons] = useState([])
+  const [showFloatbox, setShowFloatbox] = useState(false)
+  const [selectedLesson, setSelectedLesson] = useState(null)
+  const lessonRefs = useRef([])
+  const { data, loading, error } = useLesson(category)
+  const { startLesson } = useUserProgress()
 
   // Log category changes
   useEffect(() => {
-    console.log("Selected category:", category);
-  }, [category]);
+    console.log("Selected category:", category)
+  }, [category])
 
   // Log loading and error states
   useEffect(() => {
-    console.log("Loading state:", loading);
-    if (error) console.error("Error state:", error);
-  }, [loading, error]);
+    console.log("Loading state:", loading)
+    if (error) console.error("Error state:", error)
+  }, [loading, error])
 
   // Update lessons from API data
   useEffect(() => {
-    console.log("API response:", data);
+    console.log("API response:", data)
     if (data?.data) {
-      console.log("Lessons from API:", data.data);
+      console.log("Lessons from API:", data.data)
       const sortedLessons = [...data.data].sort((a, b) => {
-        return a.lesson_id - b.lesson_id;
-      });
-      setLessons(sortedLessons);
+        return a.lesson_id - b.lesson_id
+      })
+      setLessons(sortedLessons)
     }
-  }, [data]);
+  }, [data])
 
   // Log lessons state
   useEffect(() => {
-    console.log("Lessons state:", lessons);
-  }, [lessons]);
+    console.log("Lessons state:", lessons)
+  }, [lessons])
 
   // Handle lesson click to show floatbox
   const handleLessonClick = (lesson) => {
-    console.log("Clicked lesson:", lesson);
-    setSelectedLesson(lesson);
-    setShowFloatbox(true);
-  };
+    console.log("Clicked lesson:", lesson)
+    setSelectedLesson(lesson)
+    setShowFloatbox(true)
+  }
 
   // Handle floatbox button click to start lesson and navigate
   const handleStartLesson = async () => {
     if (selectedLesson) {
-      console.log("Starting lesson:", selectedLesson);
-      const token = localStorage.getItem('token');
+      console.log("Starting lesson:", selectedLesson)
+      const token = localStorage.getItem('token')
       if (!token) {
-        console.error("No token found for starting lesson");
-        setShowFloatbox(false);
-        return;
+        console.error("No token found for starting lesson")
+        setShowFloatbox(false)
+        return
       }
 
       try {
-        const response = await startLesson(selectedLesson.lesson_id, token);
+        const response = await startLesson(selectedLesson.lesson_id, token)
         console.log("API startLesson response:", {
           success: true,
           lessonId: selectedLesson.lesson_id,
           data: response,
           timestamp: new Date().toISOString(),
-        });
-        navigate(`/lesson/${selectedLesson.lesson_id}/questions`);
+        })
+        navigate(`/lesson/${selectedLesson.lesson_id}/questions`)
       } catch (err) {
         console.error("Failed to start lesson:", {
           error: err.message,
           lessonId: selectedLesson.lesson_id,
           timestamp: new Date().toISOString(),
-        });
+        })
       }
-      setShowFloatbox(false);
+      setShowFloatbox(false)
     }
-  };
+  }
 
   // Handle review submission (placeholder for "Xem lại bài làm")
   const handleReviewSubmission = () => {
     if (selectedLesson) {
-      console.log("Reviewing submission for lesson:", selectedLesson);
-      navigate("/review");
-      setShowFloatbox(false);
+      navigate(`/review/${selectedLesson.lesson_id}`) // Thêm lesson_id vào URL
+      setShowFloatbox(false)
     }
-  };
+  }
 
   // Close floatbox
   const closeFloatbox = () => {
-    setShowFloatbox(false);
-    setSelectedLesson(null);
-  };
+    setShowFloatbox(false)
+    setSelectedLesson(null)
+  }
 
   // Group lessons into sets of 5 for S-shaped path
-  const lessonGroups = [];
+  const lessonGroups = []
   for (let i = 0; i < lessons.length; i += 5) {
-    lessonGroups.push(lessons.slice(i, i + 5));
+    lessonGroups.push(lessons.slice(i, i + 5))
   }
 
   return (
@@ -118,8 +117,8 @@ const Learn = () => {
             <button
               className={`px-4 py-2 rounded ${category === "Reading" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
               onClick={() => {
-                console.log("Switching to Reading");
-                setCategory("Reading");
+                console.log("Switching to Reading")
+                setCategory("Reading")
               }}
             >
               Reading
@@ -127,8 +126,8 @@ const Learn = () => {
             <button
               className={`px-4 py-2 rounded ${category === "Listening" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
               onClick={() => {
-                console.log("Switching to Listening");
-                setCategory("Listening");
+                console.log("Switching to Listening")
+                setCategory("Listening")
               }}
             >
               Listening
@@ -148,8 +147,8 @@ const Learn = () => {
           {lessonGroups.map((group, groupIdx) => (
             <div key={groupIdx} className="relative flex flex-col items-center gap-10">
               {group.map((lesson, idx) => {
-                const totalIdx = groupIdx * 5 + idx;
-                const isLastInGroup = idx === group.length - 1;
+                const totalIdx = groupIdx * 5 + idx
+                const isLastInGroup = idx === group.length - 1
 
                 return (
                   <div key={lesson.lesson_id} className="relative flex flex-col items-center">
@@ -217,7 +216,7 @@ const Learn = () => {
                       </div>
                     )}
                   </div>
-                );
+                )
               })}
 
               {/* Mascot */}
@@ -240,7 +239,7 @@ const Learn = () => {
         <RightSidebar />
       </div> */}
     </div>
-  );
-};
+  )
+}
 
-export default Learn;
+export default Learn

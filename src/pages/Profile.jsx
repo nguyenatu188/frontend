@@ -1,64 +1,46 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import useLogout from '../hooks/useLogout'
-import useFriends from '../hooks/useFriends'
 import Sidebar from '../components/Sidebar'
 import { useAuthContext } from '../context/AuthContext'
 import { IoMale, IoFemale, IoMaleFemale } from "react-icons/io5"
 import useAvatarUpload from '../hooks/useAvatarUpload'
-import { FiUploadCloud } from "react-icons/fi"
+import { FiUploadCloud, FiEdit } from "react-icons/fi"
+import { RiLockPasswordFill } from "react-icons/ri"
+import FriendsSidebar from '../components/FriendsSidebar'
+import useProfileUpdate from '../hooks/useProfileUpdate'
+import usePasswordChange from '../hooks/usePasswordChange'
 
 const Profile = () => {
-  const friendsApi = useFriends()
-  const [showSearchPopup, setShowSearchPopup] = useState(false)
-  const [allUsers, setAllUsers] = useState([])
-  const [searchInput, setSearchInput] = useState("")
-  const [searchResults, setSearchResults] = useState([])
-  const [activeTab, setActiveTab] = useState('sent')
   const { logout, loading: logoutLoading } = useLogout()
   const { authUser } = useAuthContext()
   const { uploadAvatar, isUploading: avatarUploading, error: avatarError } = useAvatarUpload()
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [formData, setFormData] = useState({
+    full_name: '',
+    username: '',
+    email: '',
+    gender: ''
+  })
+  const { updateProfile, isUpdating, error: updateError } = useProfileUpdate()
+
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [currentPass, setCurrentPass] = useState('')
+  const [newPass, setNewPass] = useState('')
+  const [confirmPass, setConfirmPass] = useState('')
+  const { changePassword, isChanging, error: passwordError, isSuccess } = usePasswordChange()
 
   const handleLogout = () => logout()
 
-  const openSearchPopup = async () => {
-    try {
-      const users = await friendsApi.getAllUsers()
-      setAllUsers(users)
-      setShowSearchPopup(true)
-    } catch (err) {
-      console.error("Lỗi khi tải danh sách người dùng:", err)
+  useEffect(() => {
+    if (authUser) {
+      setFormData({
+        full_name: authUser.full_name || '',
+        username: authUser.username || '',
+        email: authUser.email || '',
+        gender: authUser.gender || 'other'
+      })
     }
-  }
-
-  const renderUserStatus = (user) => {
-    const isFriend = friendsApi.friends.some(f => f.user_id === user.user_id)
-    if (isFriend) return <span className="text-sm text-gray-400">Bạn bè</span>
-
-    const hasSent = friendsApi.friendRequestsSent.some(r => r.receiver?.user_id === user.user_id)
-    if (hasSent) return <span className="text-sm text-blue-500">Đã gửi lời mời</span>
-
-    const hasReceived = friendsApi.friendRequests.some(r => r.sender?.user_id === user.user_id)
-    if (hasReceived) {
-      const requestId = friendsApi.friendRequests.find(r => r.sender?.user_id === user.user_id)?.request_id
-      return (
-        <button
-          className="text-sm text-green-600 hover:underline"
-          onClick={() => friendsApi.acceptFriendRequest(requestId)}
-        >
-          Chấp nhận
-        </button>
-      )
-    }
-
-    return (
-      <button
-        className="text-sm text-green-600 hover:underline"
-        onClick={() => friendsApi.sendFriendRequest(user.user_id)}
-      >
-        Kết bạn
-      </button>
-    )
-  }
+  }, [authUser])
 
   return (
     <div className="flex">
@@ -93,15 +75,14 @@ const Profile = () => {
                 accept="image/jpeg, image/png, image/jpg, image/gif"
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
+                  const file = e.target.files?.[0]
+                  if (!file) return
                   
                   try {
-                    await uploadAvatar(file);
+                    await uploadAvatar(file)
                   } catch (err) {
-                    console.error('Upload error:', err);
-                    // Hiển thị thông báo lỗi cho người dùng
-                    alert(`Upload thất bại: ${err.message}`);
+                    console.error('Upload error:', err)
+                    alert(`Upload thất bại: ${err.message}`)
                   }
                 }}
                 disabled={avatarUploading}
@@ -121,7 +102,6 @@ const Profile = () => {
               <p className="text-3xl font-semibold text-blue-400">{authUser.full_name || authUser.username}</p>
               <div className="flex items-center justify-center gap-2">
                 <p className="text-xl text-gray-500">@{authUser.username}</p>
-                {/* Hiển thị icon giới tính */}
                 {authUser.gender === 'male' ? (
                   <IoMale className="text-blue-500 text-lg" />
                 ) : authUser.gender === 'female' ? (
@@ -141,30 +121,37 @@ const Profile = () => {
               </p>
             </div>
 
+            <button 
+              onClick={() => setShowEditModal(true)}
+              className="flex text-gray-400 hover:text-blue-500 transition-colors gap-1"
+            >
+              <FiEdit className="text-xl" />
+              <p>Chỉnh sửa hồ sơ</p>
+            </button>
+
+            <button
+              className="flex text-gray-400 hover:text-blue-500 transition-colors gap-1"
+              onClick={() => setShowPasswordModal(true)}
+            >
+              <RiLockPasswordFill className="text-xl" />
+              <p>Thay đổi mật khẩu</p>
+            </button>
+
             <div className="divider divider-info"></div>
 
-            {/* Thêm phần stats grid ở đây */}
-            <div className="w-full px-8 grid grid-cols-2 gap-4">
-              {/* Current Streak */}
+            <div className="w-full px-8 flex gap-4">
               <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
                 <h3 className="text-sm text-gray-500 mb-1">Current Streak</h3>
                 <p className="text-2xl font-bold text-blue-600">{authUser.current_streak} 🔥</p>
               </div>
 
-              {/* Longest Streak */}
               <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
                 <h3 className="text-sm text-gray-500 mb-1">Longest Streak</h3>
                 <p className="text-2xl font-bold text-purple-600">{authUser.longest_streak} 🏆</p>
               </div>
 
-              {/* Coming Soon 1 */}
               <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center">
-                <span className="text-gray-400 text-sm">Coming soon...</span>
-              </div>
-
-              {/* Coming Soon 2 */}
-              <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center">
-                <span className="text-gray-400 text-sm">Coming soon...</span>
+                <span className="text-gray-400 text-sm">Rank</span>
               </div>
             </div>
 
@@ -186,144 +173,230 @@ const Profile = () => {
         </button>
       </div>
 
-      {/* 1/3 phải */}
-      <div className="w-1/3 px-6 pt-20 bg-gray-50 overflow-auto space-y-4">
-        <div className="bg-white rounded-lg shadow-sm">
-          <div className="flex border-b">
-            <button
-              className={`flex-1 px-4 py-2 text-sm font-semibold text-center ${activeTab === 'sent' ? 'text-blue-600 border-b-2 border-blue-500' : 'text-gray-400'}`}
-              onClick={() => setActiveTab('sent')}
-            >
-              Lời mời đã gửi
-            </button>
-            <button
-              className={`flex-1 px-4 py-2 text-sm font-semibold text-center ${activeTab === 'friends' ? 'text-blue-600 border-b-2 border-blue-500' : 'text-gray-400'}`}
-              onClick={() => setActiveTab('friends')}
-            >
-              Bạn bè
-            </button>
-          </div>
-
-          <div className="p-4">
-            {friendsApi.loading ? (
-              <p className="text-sm text-gray-500 text-center">Đang tải...</p>
-            ) : activeTab === 'sent' ? (
-              friendsApi.friendRequestsSent.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center">Chưa có lời mời nào</p>
-              ) : (
-                <ul className="text-sm text-gray-800 space-y-2">
-                  {friendsApi.friendRequestsSent.map((req) => (
-                    <li key={req.request_id} className="flex justify-between items-center border-b pb-1">
-                      <span>{req.receiver?.full_name || req.receiver?.username}</span>
-                      <button
-                        onClick={() => friendsApi.revokeSentRequest(req.request_id)}
-                        className="text-xs text-blue-500 hover:underline"
-                      >
-                        Thu hồi
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )
-            ) : friendsApi.friends.length === 0 ? (
-              <p className="text-sm text-gray-500 text-center">Chưa có bạn bè nào</p>
-            ) : (
-              <ul className="text-sm text-gray-800 space-y-2">
-                {friendsApi.friends.map((user) => (
-                  <li key={user.user_id} className="flex justify-between items-center border-b pb-1">
-                    <span>{user.full_name || user.username}</span>
-                    <button
-                      onClick={() => friendsApi.deleteFriend(user.user_id)}
-                      className="text-xs text-red-500 hover:underline"
-                    >
-                      Xóa
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm p-4">
-          <h3 className="font-semibold text-gray-700 mb-3">Thêm bạn bè</h3>
-          <ul className="space-y-3">
-            <li
-              onClick={openSearchPopup}
-              className="flex justify-between items-center cursor-pointer hover:bg-gray-50 px-2 py-1 rounded"
-            >
-              <div className="flex items-center gap-2">
-                <span role="img" aria-label="search">🔍</span>
-                <span className="text-sm text-gray-700 font-medium">Tìm bạn bè</span>
+      <FriendsSidebar />
+      <div className={`modal ${showEditModal ? 'modal-open' : ''}`}>
+        <div className="modal-box">
+          <h3 className="font-bold text-2xl text-blue-500 mb-6">Chỉnh sửa hồ sơ</h3>
+          <form onSubmit={async (e) => {
+            e.preventDefault()
+            try {
+              await updateProfile(formData)
+              setShowEditModal(false)
+            } catch (err) {
+              console.error('Update error:', err)
+              alert(`Cập nhật thất bại: ${err.message}`)
+            }
+          }}>
+            <div className="space-y-4">
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">Họ và tên</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Nhập họ tên"
+                  className="input input-bordered"
+                  value={formData.full_name}
+                  onChange={(e) => setFormData({...formData, full_name: e.target.value})}
+                />
               </div>
-              <span className="text-gray-400">›</span>
-            </li>
-          </ul>
+
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">Tên đăng nhập</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Nhập tên đăng nhập"
+                  className="input input-bordered"
+                  value={formData.username}
+                  onChange={(e) => setFormData({...formData, username: e.target.value})}
+                />
+              </div>
+
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">Email</span>
+                </label>
+                <input
+                  type="email"
+                  placeholder="Nhập email"
+                  className="input input-bordered"
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                />
+              </div>
+
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">Giới tính</span>
+                </label>
+                <div className="flex gap-6">
+                  {[
+                    { value: 'male', label: 'Nam', color: 'text-blue-500' },
+                    { value: 'female', label: 'Nữ', color: 'text-pink-500' },
+                    { value: 'other', label: 'Khác', color: 'text-purple-500' }
+                  ].map((option) => (
+                    <label key={option.value} className="label cursor-pointer gap-2">
+                      <input
+                        type="radio"
+                        name="gender"
+                        value={option.value}
+                        checked={formData.gender === option.value}
+                        onChange={() => setFormData({...formData, gender: option.value})}
+                        className={`radio ${option.color}`}
+                      />
+                      <span className="label-text">{option.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {updateError && (
+                <div className="alert alert-error mt-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{updateError}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="modal-action">
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={() => setShowEditModal(false)}
+                disabled={isUpdating}
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={isUpdating}
+              >
+                {isUpdating ? (
+                  <>
+                    <span className="loading loading-spinner"></span>
+                    Đang lưu...
+                  </>
+                ) : 'Xác nhận'}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
 
-      {showSearchPopup && (
-        <div className="absolute top-24 right-6 z-50 bg-white w-96 p-6 rounded shadow-lg border border-gray-200">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold">Tìm bạn bè</h2>
-            <button className="text-red-500" onClick={() => setShowSearchPopup(false)}>✕</button>
-          </div>
+      <div className={`modal ${showPasswordModal ? 'modal-open' : ''}`}>
+        <div className="modal-box">
+          <h3 className="font-bold text-2xl text-blue-500 mb-6">Đổi mật khẩu</h3>
+          <form onSubmit={async (e) => {
+            e.preventDefault()
+            try {
+              await changePassword(currentPass, newPass, confirmPass)
+              if (isSuccess) {
+                setCurrentPass('')
+                setNewPass('')
+                setConfirmPass('')
+                setShowPasswordModal(false)
+              }
+            } catch (err) {
+              console.error('Password change error:', err)
+            }
+          }}>
+            <div className="space-y-4">
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">Mật khẩu hiện tại</span>
+                </label>
+                <input
+                  type="password"
+                  placeholder="Nhập mật khẩu hiện tại"
+                  className="input input-bordered"
+                  value={currentPass}
+                  onChange={(e) => setCurrentPass(e.target.value)}
+                  disabled={isChanging}
+                />
+              </div>
 
-          <div className="flex mb-4 gap-2">
-            <input
-              className="flex-1 border px-3 py-2 rounded"
-              type="text"
-              placeholder="Nhập username..."
-              value={searchInput}
-              onChange={(e) => {
-                const val = e.target.value
-                setSearchInput(val)
-                setSearchResults(
-                  val.trim() === ""
-                    ? []
-                    : allUsers.filter(u =>
-                        u.username.toLowerCase().includes(val.toLowerCase())
-                      )
-                )
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  setSearchResults(
-                    allUsers.filter(u =>
-                      u.username.toLowerCase().includes(searchInput.toLowerCase())
-                    )
-                  )
-                }
-              }}
-            />
-            <button
-              className="bg-blue-500 text-white px-3 rounded"
-              onClick={() => {
-                setSearchResults(
-                  allUsers.filter(u =>
-                    u.username.toLowerCase().includes(searchInput.toLowerCase())
-                  )
-                )
-              }}
-            >
-              Tìm
-            </button>
-          </div>
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">Mật khẩu mới</span>
+                </label>
+                <input
+                  type="password"
+                  placeholder="Nhập mật khẩu mới (ít nhất 8 ký tự)"
+                  className="input input-bordered"
+                  value={newPass}
+                  onChange={(e) => setNewPass(e.target.value)}
+                  disabled={isChanging}
+                />
+              </div>
 
-          <ul className="space-y-2 max-h-60 overflow-y-auto">
-            {searchResults.length === 0 ? (
-              <li className="text-sm text-gray-500 text-center">Không có kết quả</li>
-            ) : (
-              searchResults.map((user) => (
-                <li key={user.user_id} className="flex justify-between items-center border-b pb-1">
-                  <span>{user.username}</span>
-                  {renderUserStatus(user)}
-                </li>
-              ))
-            )}
-          </ul>
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">Xác nhận mật khẩu mới</span>
+                </label>
+                <input
+                  type="password"
+                  placeholder="Nhập lại mật khẩu mới"
+                  className="input input-bordered"
+                  value={confirmPass}
+                  onChange={(e) => setConfirmPass(e.target.value)}
+                  disabled={isChanging}
+                />
+              </div>
+
+              {passwordError && (
+                <div className="alert alert-error mt-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{passwordError}</span>
+                </div>
+              )}
+
+              {isSuccess && (
+                <div className="alert alert-success mt-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Đổi mật khẩu thành công!</span>
+                </div>
+              )}
+            </div>
+
+            <div className="modal-action">
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={() => {
+                  setShowPasswordModal(false)
+                  setCurrentPass('')
+                  setNewPass('')
+                  setConfirmPass('')
+                }}
+                disabled={isChanging}
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={isChanging}
+              >
+                {isChanging ? (
+                  <>
+                    <span className="loading loading-spinner"></span>
+                    Đang xử lý...
+                  </>
+                ) : 'Xác nhận'}
+              </button>
+            </div>
+          </form>
         </div>
-      )}
+      </div>
     </div>
   )
 }

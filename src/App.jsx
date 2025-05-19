@@ -39,7 +39,7 @@ function App() {
         <Route path="/shop" element={authUser ? <Shop /> : <Navigate to="/login" />} />
         <Route path="/leaderboard" element={authUser ? <LeaderBoards /> : <Navigate to="/login" />} />
         <Route path="/lesson/:lessonId/questions" element={ authUser ? <StartExam /> : <Navigate to="/login" />} />
-        <Route path="/review" element={ authUser ? <Review /> : <Navigate to="/login" />} />
+        <Route path="/review/:lessonId" element={ authUser ? <Review /> : <Navigate to="/login" />} />
       </Routes>
     </>
   )
