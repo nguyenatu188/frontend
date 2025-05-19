@@ -4,12 +4,14 @@ import { IconBolt, IconTarget, IconCoin } from '@tabler/icons-react';
 import Sidebar from '../components/Sidebar';
 import RightSidebar from '../components/RightSidebar';
 import useDailyMissions from '../hooks/useDailyMissions';
+import { useAuthContext } from '../context/AuthContext'; // Thêm import này
 
 const Missions = () => {
     const { data, loading, error } = useDailyMissions();
     const [missions, setMissions] = useState([]);
     const [showFloatbox, setShowFloatbox] = useState(false);
     const [selectedMission, setSelectedMission] = useState(null);
+    const { setAuthUser, fetchWithAuth } = useAuthContext();
 
     useEffect(() => {
         if (data?.missions) {
@@ -46,6 +48,15 @@ const Missions = () => {
             }
 
             const result = await response.json();
+             try {
+                const userRes = await fetchWithAuth('http://127.0.0.1:8000/api/v1/user');
+                if (userRes.ok) {
+                    const userData = await userRes.json();
+                    setAuthUser(userData.user); // Cập nhật authUser
+                }
+            } catch (err) {
+                console.error('Lỗi cập nhật user:', err);
+            }
             // Cập nhật trạng thái reward_claimed trong state
             setMissions(missions.map((m) =>
                 m.user_mission_id === selectedMission.user_mission_id

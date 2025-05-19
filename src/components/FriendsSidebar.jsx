@@ -180,7 +180,7 @@ const FriendsSidebar = () => {
             ) : (
               searchResults.map((user) => (
                 <li key={user.user_id} className="flex justify-between items-center border-b pb-1">
-                  <span>{user.username}</span>
+                  <span className='text-gray-700'>{user.username}</span>
                   {renderUserStatus(user)}
                 </li>
               ))
