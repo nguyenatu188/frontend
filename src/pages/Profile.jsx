@@ -184,7 +184,6 @@ const Profile = () => {
         >
           {logoutLoading ? 'Đang đăng xuất...' : 'Đăng xuất'}
         </button>
-        <Comment />
       </div>
 
       {/* 1/3 phải */}
