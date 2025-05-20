@@ -164,6 +164,17 @@ const StartExam = () => {
         isLastQuestion,
     });
 
+
+    const baseUrl = 'http://localhost:8000/audios';
+const audioSrc = currentQuestion.audio_file?.startsWith('http')
+    ? currentQuestion.audio_file
+    : `${baseUrl}/${currentQuestion.audio_file}`;
+
+console.log('Audio debug:', {
+    audio_file: currentQuestion.audio_file,
+    audio_src: audioSrc,
+});
+
     return (
         <div className="min-h-screen bg-white text-black flex flex-col items-center p-6 relative">
             {/* Header */}
@@ -171,20 +182,20 @@ const StartExam = () => {
                 <div className="p-2 rounded-lg flex items-center justify-between">
                     <button
                         onClick={handleClose}
-                        className="text-3xl font-bold text-black hover:text-gray-400"
+                        className="text-3xl font-bold text-black hover:text-blue-400 hover:scale-130 transition-transform duration-200"
                         aria-label="Quay lại trang học"
                     >
-                        ×
+                        x
                     </button>
-                    <div className="flex-1 mx-4 h-2 bg-gray-600 rounded-full overflow-hidden">
+                    <div className="flex-1 mx-4 h-5 bg-gray-300 rounded-full overflow-hidden">
                         <div
                             className="h-full bg-green-400 rounded-full transition-all duration-300"
                             style={{ width: `${((currentQuestionIndex + 1) / data.questions.length) * 100}%` }}
                         >
-                            <span className="absolute left-0 ml-1 transform -translate-y-1/2 bg-green-400 rounded-full w-3 h-3"></span>
+
                         </div>
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2  ">
                         <span className="text-red-400 text-xl">❤️</span>
                         <span className="text-black">4</span>
                     </div>
@@ -197,13 +208,43 @@ const StartExam = () => {
             {/* Main Content */}
             <main className="w-full max-w-4xl flex-grow">
                 <h3 className="text-2xl font-bold text-black mb-4 text-center">{currentQuestion.question_text}</h3>
+                {/* Debug audio_file và question_type */}
+                {console.log('audio_file:', currentQuestion.audio_file)}
+                {console.log('question_type:', currentQuestion.question_type)}
+                {console.log('is_listening:', currentQuestion.question_type?.toLowerCase() === 'listening')}
+                {/* Thêm audio player cho câu hỏi listening, đặt ngay dưới câu hỏi */}
+                {currentQuestion.audio_file ? (
+    <div className="mb-6 flex justify-center">
+        <audio
+            controls
+            src={audioSrc}
+            className="w-full max-w-md rounded-lg border border-gray-300"
+            style={{ display: 'block' }}
+            preload="auto"
+            onError={(e) => {
+                console.error('Audio error:', {
+                    errorCode: e.target.error?.code,
+                    errorMessage: e.target.error?.message,
+                    audioSrc,
+                });
+            }}
+            onCanPlay={() => console.log('Audio can play:', audioSrc)}
+        >
+            Trình duyệt của bạn không hỗ trợ thẻ audio.
+        </audio>
+    </div>
+) : (
+    <div className="mb-6 text-center text-red-500">
+        Không có file âm thanh cho câu hỏi này
+    </div>
+)}
                 <form onSubmit={handleCheckAnswer} className="space-y-4">
                     {currentQuestion.options.map((option) => (
                         <label
                             key={option.option_id}
-                            className={`flex items-center justify-between p-4 rounded-lg border-2 ${selectedOption === option.option_id
-                                    ? 'border-blue-500 bg-blue-100'
-                                    : 'border-gray-300'
+                            className={`flex items-center justify-between p-4 rounded-lg border-2 hover:bg-gray-200 ${selectedOption === option.option_id
+                                ? 'border-blue-500 bg-blue-100'
+                                : 'border-gray-300'
                                 } ${isChecked
                                     ? option.is_correct
                                         ? 'border-green-500 bg-green-100'
@@ -221,7 +262,7 @@ const StartExam = () => {
                                 checked={selectedOption === option.option_id}
                                 onChange={() => handleOptionChange(option.option_id)}
                                 disabled={isChecked || submitLoading}
-                                className="h-5 w-5 text-blue-500 focus:ring-blue-500"
+                                className="h-5 w-5 text-blue-500 border-gray-300 rounded-full focus:ring-blue-500 cursor-pointer"
                             />
                         </label>
                     ))}
