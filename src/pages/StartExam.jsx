@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { React, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { IconXboxX, IconCircleCheck } from '@tabler/icons-react';
 import useQuestion from '../hooks/useQuestion';
@@ -9,16 +9,25 @@ const StartExam = () => {
     const navigate = useNavigate();
     const parsedLessonId = parseInt(lessonId, 10);
     const { data, loading, error } = useQuestion(parsedLessonId || 0);
-    const { submitAnswer, finalizeLessonProgress, loading: submitLoading, error: submitError } = useUserProgress();
+    const { data: progressStats, getLearningStats, submitAnswer, finalizeLessonProgress, loading: submitLoading, error: submitError } = useUserProgress();
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [selectedOption, setSelectedOption] = useState(null);
     const [isChecked, setIsChecked] = useState(false);
     const [isCorrect, setIsCorrect] = useState(null);
     const [results, setResults] = useState([]); // Lưu kết quả từng câu
     const [showFloatbox, setShowFloatbox] = useState(false); // Điều khiển floatbox
+    const [statsLoaded, setStatsLoaded] = useState(false);
 
-    // Debug: Log lessonId and parsedLessonId
-    console.log('StartExam lessonId:', { lessonId, parsedLessonId });
+    console.log("progressStats lives", progressStats?.lives);
+    console.log("progressStats time_limit", progressStats?.time_limit);
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token && !statsLoaded) {
+            getLearningStats(token);
+            setStatsLoaded(true);
+        }
+    }, [getLearningStats, statsLoaded]);
+     console.log('StartExam lessonId:', { lessonId, parsedLessonId });
 
     // Check for invalid lessonId
     if (!lessonId || isNaN(parsedLessonId)) {
@@ -85,6 +94,7 @@ const StartExam = () => {
 
             setIsCorrect(isAnswerCorrect);
             setIsChecked(true);
+            await getLearningStats(token);
         } catch (err) {
             console.error('Error checking answer:', err);
             alert('Lỗi khi kiểm tra câu trả lời: ' + err.message);
@@ -164,17 +174,6 @@ const StartExam = () => {
         isLastQuestion,
     });
 
-
-    const baseUrl = 'http://localhost:8000/audios';
-const audioSrc = currentQuestion.audio_file?.startsWith('http')
-    ? currentQuestion.audio_file
-    : `${baseUrl}/${currentQuestion.audio_file}`;
-
-console.log('Audio debug:', {
-    audio_file: currentQuestion.audio_file,
-    audio_src: audioSrc,
-});
-
     return (
         <div className="min-h-screen bg-white text-black flex flex-col items-center p-6 relative">
             {/* Header */}
@@ -197,7 +196,7 @@ console.log('Audio debug:', {
                     </div>
                     <div className="flex items-center space-x-2  ">
                         <span className="text-red-400 text-xl">❤️</span>
-                        <span className="text-black">4</span>
+                        <span className="text-black">{progressStats?.lives}</span>
                     </div>
                 </div>
                 <h2 className="text-xl font-bold text-blue-500 text-center my-6">
@@ -208,36 +207,18 @@ console.log('Audio debug:', {
             {/* Main Content */}
             <main className="w-full max-w-4xl flex-grow">
                 <h3 className="text-2xl font-bold text-black mb-4 text-center">{currentQuestion.question_text}</h3>
-                {/* Debug audio_file và question_type */}
-                {console.log('audio_file:', currentQuestion.audio_file)}
-                {console.log('question_type:', currentQuestion.question_type)}
-                {console.log('is_listening:', currentQuestion.question_type?.toLowerCase() === 'listening')}
-                {/* Thêm audio player cho câu hỏi listening, đặt ngay dưới câu hỏi */}
-                {currentQuestion.audio_file ? (
-    <div className="mb-6 flex justify-center">
-        <audio
-            controls
-            src={audioSrc}
-            className="w-full max-w-md rounded-lg border border-gray-300"
-            style={{ display: 'block' }}
-            preload="auto"
-            onError={(e) => {
-                console.error('Audio error:', {
-                    errorCode: e.target.error?.code,
-                    errorMessage: e.target.error?.message,
-                    audioSrc,
-                });
-            }}
-            onCanPlay={() => console.log('Audio can play:', audioSrc)}
-        >
-            Trình duyệt của bạn không hỗ trợ thẻ audio.
-        </audio>
-    </div>
-) : (
-    <div className="mb-6 text-center text-red-500">
-        Không có file âm thanh cho câu hỏi này
-    </div>
-)}
+                {/* Audio bên dưới câu hỏi */}
+                {currentQuestion.audio_url && (
+                    <>
+                        {console.log("Audio URL:", currentQuestion.audio_url)}
+                        <div className="flex justify-center mb-4">
+                            <audio controls preload="auto" className="w-full max-w-md">
+                                <source src={currentQuestion.audio_url} type="audio/mpeg" />
+                                Trình duyệt của bạn không hỗ trợ phát âm thanh.
+                            </audio>
+                        </div>
+                    </>
+                )}
                 <form onSubmit={handleCheckAnswer} className="space-y-4">
                     {currentQuestion.options.map((option) => (
                         <label

@@ -141,10 +141,10 @@ const Learn = () => {
     // Rotate through colors for each group of 5 lessons
     const colors = [
       { bg: "bg-custom-blue", hover: "hover-custom-blue", border: "border-custom-blue", text: "text-custom-blue" },
-      { bg: "bg-custom-green", hover: "hover-custom-green", border: "border-custom-green", text: "text-custom-green" },
       { bg: "bg-custom-purple", hover: "hover-custom-purple", border: "border-custom-purple", text: "text-custom-purple" },
+      { bg: "bg-custom-pink", hover: "hover-custom-pink", border: "border-custom-pink", text: "text-custom-pink" },
+      { bg: "bg-custom-green", hover: "hover-custom-green", border: "border-custom-green", text: "text-custom-green" },
       { bg: "bg-custom-teal", hover: "hover-custom-teal", border: "border-custom-teal", text: "text-custom-teal" },
-      { bg: "bg-custom-pink", hover: "hover-custom-pink", border: "border-custom-pink", text: "text-custom-pink" }
     ];
 
     return colors[groupIdx % colors.length];
