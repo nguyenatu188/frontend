@@ -115,6 +115,9 @@ const useUserProgress = () => {
         if (response.status === 404) {
           throw new Error('Endpoint startLesson không tồn tại');
         }
+        if (response.status === 403) {
+          throw new Error('Không có quyền tiếp tục học');
+        }
         throw new Error('Không thể bắt đầu bài học');
       }
 
@@ -145,7 +148,7 @@ const useUserProgress = () => {
   };
 
   // Hoàn thành bài học
-  const completeLesson = async (lessonId, answers, token) => {
+  const completeLesson = async (lessonId, answers, elapsedTime, token) => {
     setLoading(true);
     setError(null);
     try {
@@ -155,10 +158,16 @@ const useUserProgress = () => {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ answers }),
+        body: JSON.stringify({ answers, elapsed_time: elapsedTime }),
       });
 
       if (!response.ok) {
+        if (response.status === 403) {
+          throw new Error('Thời gian làm bài đã hết');
+        }
+        if (response.status === 400) {
+          throw new Error('Dữ liệu đầu vào không hợp lệ');
+        }
         throw new Error('Không thể hoàn thành bài học');
       }
 
@@ -175,19 +184,21 @@ const useUserProgress = () => {
       }
 
       setData(result.data);
+      return result.data;
     } catch (err) {
       console.error('API completeLesson error:', {
         error: err.message,
         timestamp: new Date().toISOString(),
       });
       setError(err.message);
+      throw err;
     } finally {
       setLoading(false);
     }
   };
 
   // Nộp một câu trả lời
-  const submitAnswer = async (lessonId, questionId, optionId, token) => {
+  const submitAnswer = async (lessonId, questionId, optionId, elapsedTime, token) => {
     setLoading(true);
     setError(null);
     try {
@@ -199,11 +210,17 @@ const useUserProgress = () => {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ option_id: optionId }),
+          body: JSON.stringify({ option_id: optionId, elapsed_time: elapsedTime }),
         }
       );
 
       if (!response.ok) {
+        if (response.status === 403) {
+          throw new Error('Thời gian làm bài đã hết');
+        }
+        if (response.status === 400) {
+          throw new Error('Dữ liệu đầu vào không hợp lệ');
+        }
         throw new Error('Không thể nộp câu trả lời');
       }
 
@@ -220,12 +237,14 @@ const useUserProgress = () => {
       }
 
       setData(result.data);
+      return result.data;
     } catch (err) {
       console.error('API submitAnswer error:', {
         error: err.message,
         timestamp: new Date().toISOString(),
       });
       setError(err.message);
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -245,6 +264,9 @@ const useUserProgress = () => {
       });
 
       if (!response.ok) {
+        if (response.status === 400) {
+          throw new Error('Dữ liệu đầu vào không hợp lệ');
+        }
         throw new Error('Không thể hoàn thành bài học');
       }
 
@@ -261,12 +283,14 @@ const useUserProgress = () => {
       }
 
       setData(result.data);
+      return result.data;
     } catch (err) {
       console.error('API finalizeLessonProgress error:', {
         error: err.message,
         timestamp: new Date().toISOString(),
       });
       setError(err.message);
+      throw err;
     } finally {
       setLoading(false);
     }
