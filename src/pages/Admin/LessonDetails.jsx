@@ -1,19 +1,18 @@
 import React from 'react'
 import { useParams } from 'react-router-dom'
-import useQuestion from '../hooks/useQuestion'
-import Comments from '../components/Comments'
-import Sidebar from '../components/Sidebar'
+import useQuestion from '../../hooks/useQuestion'
+import Comments from '../../components/Comments'
+import AdminSidebar from '../../components/admin/AdminSidebar'
 
-const Review = () => {
+const LessonDetails = () => {
   const { lessonId } = useParams()
   const { data, loading, error } = useQuestion(lessonId)
 
   if (loading) return <div>Loading...</div>
   if (error) return <div>Error: {error}</div>
-
   return (
-    <div className='flex'>
-      <Sidebar />
+    <div className='flex min-h-screen'>
+      <AdminSidebar />
       <div className="w-full bg-white mx-auto pl-68 p-4">
         <h1 className="text-3xl font-bold text-blue-400 mb-6 text-center">Review: {data.lesson?.title}</h1>
         
@@ -57,4 +56,4 @@ const Review = () => {
   )
 }
 
-export default Review
+export default LessonDetails

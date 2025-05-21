@@ -2,18 +2,21 @@ import { useState } from 'react';
 import useComments from '../hooks/useComments';
 import CommentItem from './CommentItem';
 import { useAuthContext } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
-const Comments = () => {
-  const { comments, loading, addComment } = useComments(1);
+const Comments = ({ lessonId }) => {
+  const { comments, loading, addComment } = useComments(lessonId);
   const [newComment, setNewComment] = useState('');
   const { authUser } = useAuthContext();
+  const navigate = useNavigate();
 
   const userAvatar = authUser?.avatar || 'default-avatar.png';
   const userFullName = authUser?.full_name || 'Unknown User';
+  const userName = authUser?.username || 'Unknown User';
 
   const handleAddComment = () => {
     if (newComment.trim()) {
-      addComment(newComment, null, userFullName, userAvatar); // name truyền để reply dùng
+      addComment(newComment, null, userFullName, userAvatar, userName); // name truyền để reply dùng
       setNewComment('');
     }
   };
@@ -36,8 +39,8 @@ const Comments = () => {
       <div className="flex items-center gap-3 mb-5 p-4 border border-gray-200 rounded-lg bg-white shadow-sm">
         <img
           src={`http://127.0.0.1:8000/storage/avatars/${authUser.avatar}`}
-          alt="avatar"
-          className="w-10 h-10 rounded-full object-cover"
+          onClick={authUser.role_id === 2 ? () => navigate(`/profile`) : () => navigate(`/statistics`)}
+          className="w-10 h-10 rounded-full object-cover cursor-pointer"
         />
         <input
           type="text"
@@ -64,7 +67,7 @@ const Comments = () => {
           <CommentItem
             key={comment.id}
             comment={comment}
-            onReply={(content, parentId) => addComment(content, parentId, userFullName, userAvatar)}
+            onReply={(content, parentId) => addComment(content, parentId, userFullName, userAvatar, userName)}
             allNames={allNames}
           />
         ))

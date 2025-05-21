@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom"
-import { Home, Activity, Shield, Store, User, MoreHorizontal, Target } from "lucide-react"
+import { Home, Activity, Store, User, Target } from "lucide-react"
 
 import { IconTrophy } from "@tabler/icons-react"
 import { useAuthContext } from "../context/AuthContext"

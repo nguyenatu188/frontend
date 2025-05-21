@@ -1,10 +1,11 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react'
 
 const useLesson = (category) => {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [data, setData] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [trigger, setTrigger] = useState(0)
 
   const getLessonByCategory = async (category, token) => {
     try {
@@ -13,36 +14,38 @@ const useLesson = (category) => {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
-      });
+      })
 
       if (!response.ok) {
-        throw new Error('Chưa có bài học nào cho danh mục này');
+        throw new Error('Chưa có bài học nào cho danh mục này')
       }
 
-      const result = await response.json();
-      setData(result);
+      const result = await response.json()
+      setData(result)
     } catch (err) {
-      setError(err.message);
+      setError(err.message)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token')
     
     if (!token) {
-      setError('Token is required');
-      setLoading(false);
-      return;
+      setError('Token is required')
+      setLoading(false)
+      return
     }
 
-    console.log('Fetching data for category:', category);
-    setLoading(true);
-    getLessonByCategory(category, token);
-  }, [category]);
+    console.log('Fetching data for category:', category)
+    setLoading(true)
+    getLessonByCategory(category, token)
+  }, [category, trigger])
 
-  return { data, loading, error };
-};
+  const refetch = () => setTrigger(prev => prev + 1)
 
-export default useLesson;
+  return { data, loading, error, refetch }
+}
+
+export default useLesson

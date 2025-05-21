@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import useFriends from '../hooks/useFriends'
+import useUserDetail from '../hooks/useUserDetail'
+import UserProfileModal from './UserProfileModal'
 
 const FriendsSidebar = () => {
   const friendsApi = useFriends()
@@ -8,6 +10,8 @@ const FriendsSidebar = () => {
   const [searchInput, setSearchInput] = useState("")
   const [searchResults, setSearchResults] = useState([])
   const [activeTab, setActiveTab] = useState('sent')
+  const [selectedUser, setSelectedUser] = useState(null)
+  const { getUserDetail, isLoading: userLoading, error: userError } = useUserDetail()
 
   const openSearchPopup = async () => {
     try {
@@ -17,6 +21,19 @@ const FriendsSidebar = () => {
     } catch (err) {
       console.error("Lỗi khi tải danh sách người dùng:", err)
     }
+  }
+
+  const handleClickUser = async (userId) => {
+    try {
+      const userDetail = await getUserDetail(userId)
+      setSelectedUser(userDetail)
+    } catch (err) {
+      console.error("Lỗi:", err)
+    }
+  }
+
+  const closeProfileModal = () => {
+    setSelectedUser(null)
   }
 
   const renderUserStatus = (user) => {
@@ -92,10 +109,15 @@ const FriendsSidebar = () => {
             ) : friendsApi.friends.length === 0 ? (
               <p className="text-sm text-gray-500 text-center">Chưa có bạn bè nào</p>
             ) : (
-              <ul className="text-sm text-gray-800 space-y-2">
+              <ul className="text-sm text-gray-700 space-y-2">
                 {friendsApi.friends.map((user) => (
                   <li key={user.user_id} className="flex justify-between items-center border-b pb-1">
-                    <span>{user.full_name || user.username}</span>
+                    <span 
+                      className="cursor-pointer hover:text-blue-500 transition-colors"
+                      onClick={() => handleClickUser(user.user_id)}
+                    >
+                      {user.full_name || user.username}
+                    </span>
                     <button
                       onClick={() => friendsApi.deleteFriend(user.user_id)}
                       className="text-xs text-red-500 hover:underline"
@@ -180,13 +202,27 @@ const FriendsSidebar = () => {
             ) : (
               searchResults.map((user) => (
                 <li key={user.user_id} className="flex justify-between items-center border-b pb-1">
-                  <span className='text-gray-700'>{user.username}</span>
+                  <span 
+                    className='text-gray-700 cursor-pointer hover:text-blue-500 transition-colors'
+                    onClick={() => handleClickUser(user.user_id)}
+                  >
+                    {user.username}
+                  </span>
                   {renderUserStatus(user)}
                 </li>
               ))
             )}
           </ul>
         </div>
+      )}
+
+      {selectedUser && (
+        <UserProfileModal
+          user={selectedUser}
+          onClose={closeProfileModal}
+          isLoading={userLoading}
+          error={userError}
+        />
       )}
     </>
   )

@@ -1,44 +1,44 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react'
 
 const CommentItem = ({ comment, onReply, allNames }) => {
-  const [likes, setLikes] = useState(0);
-  const [dislikes, setDislikes] = useState(0);
-  const [userReacted, setUserReacted] = useState(null);
-  const [showReply, setShowReply] = useState(false);
-  const [replyContent, setReplyContent] = useState('');
-  const replyInputRef = useRef(null);
+  const [likes, setLikes] = useState(0)
+  const [dislikes, setDislikes] = useState(0)
+  const [userReacted, setUserReacted] = useState(null)
+  const [showReply, setShowReply] = useState(false)
+  const [replyContent, setReplyContent] = useState('')
+  const replyInputRef = useRef(null)
 
   useEffect(() => {
     if (showReply && replyInputRef.current) {
-      replyInputRef.current.focus();
+      replyInputRef.current.focus()
     }
-  }, [showReply]);
+  }, [showReply])
 
   const handleReply = () => {
     if (replyContent.trim()) {
-      const replyingTo = comment.name || 'Unknown User';
-      onReply(`@${replyingTo} ${replyContent}`, comment.id);
-      setReplyContent('');
-      setShowReply(false);
+      const replyingTo = comment.name || 'Unknown User'
+      onReply(`@${replyingTo} ${replyContent}`, comment.id)
+      setReplyContent('')
+      setShowReply(false)
     }
-  };
+  }
 
   const renderContent = (content) => {
-    const words = content.split(/(\s+)/);
+    const words = content.split(/(\s+)/)
     return words.map((word, i) => {
       if (word.startsWith("@")) {
-        const nameOnly = word.slice(1);
+        const nameOnly = word.slice(1)
         if (allNames.includes(nameOnly)) {
           return (
             <span key={i} className="text-gray-700 font-semibold">
               {word}
             </span>
-          );
+          )
         }
       }
-      return word;
-    });
-  };
+      return word
+    })
+  }
 
   return (
     <div className="ml-5 mt-4">
@@ -49,16 +49,17 @@ const CommentItem = ({ comment, onReply, allNames }) => {
           className="w-10 h-10 rounded-full object-cover"
         />
         <div>
-          <div className="font-semibold text-blue-600">{comment.name}</div>
+          <span className='font-semibold text-lg text-blue-600'>{comment.username}</span>
+          <span className="font-semibold text-sm text-blue-600"> ({comment.name})</span>
           <div className="text-xs text-gray-700">{comment.time}</div>
           <p className="mt-1 text-gray-700">{renderContent(comment.content)}</p>
           <div className="flex gap-3 text-sm text-gray-700 mt-2">
             <button
               onClick={() => {
-                if (userReacted === 'like') return;
-                if (userReacted === 'dislike') setDislikes(dislikes - 1);
-                setLikes(likes + 1);
-                setUserReacted('like');
+                if (userReacted === 'like') return
+                if (userReacted === 'dislike') setDislikes(dislikes - 1)
+                setLikes(likes + 1)
+                setUserReacted('like')
               }}
               className="hover:underline"
             >
@@ -66,10 +67,10 @@ const CommentItem = ({ comment, onReply, allNames }) => {
             </button>
             <button
               onClick={() => {
-                if (userReacted === 'dislike') return;
-                if (userReacted === 'like') setLikes(likes - 1);
-                setDislikes(dislikes + 1);
-                setUserReacted('dislike');
+                if (userReacted === 'dislike') return
+                if (userReacted === 'like') setLikes(likes - 1)
+                setDislikes(dislikes + 1)
+                setUserReacted('dislike')
               }}
               className="hover:underline"
             >
@@ -120,7 +121,7 @@ const CommentItem = ({ comment, onReply, allNames }) => {
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default CommentItem;
+export default CommentItem
