@@ -251,7 +251,7 @@ const useUserProgress = () => {
   };
 
   // Hoàn thành bài học sau khi nộp tất cả câu trả lời
-  const finalizeLessonProgress = async (lessonId, token) => {
+  const finalizeLessonProgress = async (lessonId, token, elapsedTime) => {
     setLoading(true);
     setError(null);
     try {
@@ -261,6 +261,7 @@ const useUserProgress = () => {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ elapsed_time: elapsedTime }),
       });
 
       if (!response.ok) {

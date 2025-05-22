@@ -1,4 +1,4 @@
-import { React, useState, useEffect } from 'react';
+import { React, useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { IconXboxX, IconCircleCheck } from '@tabler/icons-react';
 import useQuestion from '../hooks/useQuestion';
@@ -17,50 +17,120 @@ const StartExam = () => {
     const [isCorrect, setIsCorrect] = useState(null);
     const [results, setResults] = useState([]);
     const [showFloatbox, setShowFloatbox] = useState(false);
-    const [statsLoaded, setStatsLoaded] = useState(false);
+    const [floatboxReason, setFloatboxReason] = useState(null); // null, 'time', 'lives', 'error'
+    const [errorMessage, setErrorMessage] = useState(null);
     const [elapsedTime, setElapsedTime] = useState(0);
     const [timerActive, setTimerActive] = useState(false);
-    const [showTimeUpFloatbox, setShowTimeUpFloatbox] = useState(false);
-    const [showLivesUpFloatbox, setShowLivesUpFloatbox] = useState(false);
+    const [isStatsFetching, setIsStatsFetching] = useState(false); // Prevent duplicate stats calls
+    const timerRef = useRef(null);
+
+    // Fetch lives on mount (once)
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token && !isStatsFetching) {
+            setIsStatsFetching(true);
+            getLearningStats(token)
+                .catch((err) => {
+                    setErrorMessage('Lỗi khi lấy dữ liệu lượt chơi: ' + err.message);
+                })
+                .finally(() => {
+                    setIsStatsFetching(false);
+                });
+        } else if (!token) {
+            setErrorMessage('Không tìm thấy token xác thực.');
+        }
+        setTimerActive(true);
+        return () => {
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+            }
+        };
+    }, []); // Empty deps for single mount call
 
     // Timer logic
     useEffect(() => {
-        let timer;
         if (timerActive) {
-            timer = setInterval(() => {
+            timerRef.current = setInterval(() => {
                 setElapsedTime((prev) => prev + 1);
             }, 1000);
         }
-        return () => clearInterval(timer);
+        return () => {
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+            }
+        };
     }, [timerActive]);
+
+    // Helper function for auto-completion
+    const autoCompleteExam = async (reason) => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            setErrorMessage('Không tìm thấy token xác thực.');
+            setShowFloatbox(true);
+            setFloatboxReason('error');
+            return;
+        }
+
+        try {
+            // Submit current question if unanswered and questions are available
+            if (!isChecked && data?.questions?.length > 0 && currentQuestionIndex < data.questions.length) {
+                const question = data.questions[currentQuestionIndex];
+                const response = await submitAnswer(
+                    parsedLessonId,
+                    question.question_id,
+                    selectedOption || null,
+                    elapsedTime,
+                    token
+                );
+                const isAnswerCorrect = response?.data?.is_correct ?? false;
+
+                setResults((prev) => [
+                    ...prev,
+                    {
+                        questionId: question.question_id,
+                        questionText: question.question_text,
+                        isCorrect: isAnswerCorrect,
+                    },
+                ]);
+
+                // Update lives after submission
+                if (!isStatsFetching) {
+                    setIsStatsFetching(true);
+                    await getLearningStats(token);
+                    setIsStatsFetching(false);
+                }
+            }
+
+            // Finalize lesson progress
+            setTimerActive(false);
+            clearInterval(timerRef.current);
+            await finalizeLessonProgress(parsedLessonId, token, elapsedTime);
+            setFloatboxReason(reason);
+            setShowFloatbox(true);
+        } catch (err) {
+            setErrorMessage('Lỗi khi tự động hoàn thành bài thi: ' + err.message);
+            setShowFloatbox(true);
+            setFloatboxReason('error');
+        }
+    };
 
     // Check time limit
     useEffect(() => {
-        if (data.lesson?.time_limit && elapsedTime >= data.lesson.time_limit) {
+        if (data?.lesson?.time_limit && elapsedTime >= data.lesson.time_limit && timerActive) {
             setTimerActive(false);
-            setShowTimeUpFloatbox(true);
+            autoCompleteExam('time');
         }
-    }, [elapsedTime, data.lesson?.time_limit]);
+    }, [elapsedTime, data?.lesson?.time_limit, timerActive]);
 
     // Check lives
     useEffect(() => {
-        if (progressStats?.lives === 0) {
+        if (progressStats?.lives === 0 && timerActive) {
             setTimerActive(false);
-            setShowLivesUpFloatbox(true);
+            autoCompleteExam('lives');
         }
-    }, [progressStats?.lives]);
+    }, [progressStats?.lives, timerActive]);
 
-    // Initialize stats and start timer
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token && !statsLoaded) {
-            getLearningStats(token);
-            setStatsLoaded(true);
-        }
-        setTimerActive(true);
-    }, [getLearningStats, statsLoaded]);
-
-    // Handle invalid lessonId
+    // Handle invalid lessonId or data issues
     if (!lessonId || isNaN(parsedLessonId)) {
         return (
             <div className="max-w-2xl mx-auto p-6 text-center text-red-500">
@@ -70,28 +140,28 @@ const StartExam = () => {
     }
 
     // Handle loading, errors, or no questions
-    if (loading || error || !data.questions || data.questions.length === 0) {
+    if (loading || error || !data?.questions || data.questions.length === 0) {
         return <Loading />;
     }
 
     // Handle close button
     const handleClose = () => {
         setTimerActive(false);
+        clearInterval(timerRef.current);
         navigate('/learn');
     };
 
     // Handle answer submission
     const handleCheckAnswer = async (e) => {
         e.preventDefault();
-        console.log('Elapsed time on submit:', elapsedTime);
         if (!selectedOption) {
-            alert('Vui lòng chọn một đáp án!');
+            setErrorMessage('Vui lòng chọn một đáp án!');
             return;
         }
 
         const token = localStorage.getItem('token');
         if (!token) {
-            alert('Token is required');
+            setErrorMessage('Không tìm thấy token xác thực.');
             return;
         }
 
@@ -100,7 +170,10 @@ const StartExam = () => {
             const selectedOptionData = question.options.find(
                 (option) => option.option_id === selectedOption
             );
-            setTimerActive(false);
+            if (currentQuestionIndex === data.questions.length - 1) {
+                setTimerActive(false);
+                clearInterval(timerRef.current);
+            }
             const response = await submitAnswer(parsedLessonId, question.question_id, selectedOption, elapsedTime, token);
             const isAnswerCorrect = response?.data?.is_correct ?? selectedOptionData.is_correct === 1;
 
@@ -115,9 +188,16 @@ const StartExam = () => {
 
             setIsCorrect(isAnswerCorrect);
             setIsChecked(true);
-            await getLearningStats(token);
+            setErrorMessage(null);
+
+            // Update lives after submission
+            if (!isStatsFetching) {
+                setIsStatsFetching(true);
+                await getLearningStats(token);
+                setIsStatsFetching(false);
+            }
         } catch (err) {
-            alert('Lỗi khi kiểm tra câu trả lời: ' + err.message);
+            setErrorMessage('Lỗi khi kiểm tra câu trả lời: ' + err.message);
         }
     };
 
@@ -129,19 +209,25 @@ const StartExam = () => {
             setIsChecked(false);
             setIsCorrect(null);
             setTimerActive(true);
+            setErrorMessage(null);
         } else {
             const token = localStorage.getItem('token');
             if (!token) {
-                alert('Token is required');
+                setErrorMessage('Không tìm thấy token xác thực.');
                 return;
             }
 
             try {
                 setTimerActive(false);
-                await finalizeLessonProgress(parsedLessonId, token);
+                clearInterval(timerRef.current);
+                await finalizeLessonProgress(parsedLessonId, token, elapsedTime);
+                setFloatboxReason(null);
                 setShowFloatbox(true);
+                setErrorMessage(null);
             } catch (err) {
-                alert('Lỗi khi hoàn thành bài học: ' + err.message);
+                setErrorMessage('Lỗi khi hoàn thành bài học: ' + err.message);
+                setShowFloatbox(true);
+                setFloatboxReason('error');
             }
         }
     };
@@ -151,6 +237,7 @@ const StartExam = () => {
         setSelectedOption(optionId);
         setIsChecked(false);
         setIsCorrect(null);
+        setErrorMessage(null);
     };
 
     // Format time for display
@@ -163,7 +250,7 @@ const StartExam = () => {
     // Calculate results
     const correctCount = results.filter((result) => result.isCorrect).length;
     const totalQuestions = data.questions.length;
-    const score = (correctCount / totalQuestions) * 100;
+    const score = totalQuestions > 0 ? (correctCount / totalQuestions) * 100 : 0;
 
     const currentQuestion = data.questions[currentQuestionIndex];
     const isLastQuestion = currentQuestionIndex === data.questions.length - 1;
@@ -182,23 +269,22 @@ const StartExam = () => {
                     </button>
                     <div className="flex-1 mx-4 h-5 bg-gray-300 rounded-full overflow-hidden">
                         <div
-                            className="h-full bg-green-400 rounded-full transition-all duration-300"
-                            style={{ width: `${((currentQuestionIndex + 1) / data.questions.length) * 100}%` }}
+                            className="h-full bg-gradient-to-r from-green-400 to-blue-500 rounded-full transition-all duration-300"
+                            style={{ width: `${((currentQuestionIndex + 1) / totalQuestions) * 100}%` }}
                         />
                     </div>
                     <div className="flex items-center space-x-2">
                         <span className="text-red-400 text-xl">❤️</span>
-                        <span className="text-black">{progressStats?.lives}</span>
+                        <span className="text-black">{progressStats?.lives ?? 0}</span>
                     </div>
                 </div>
                 <h2 className="text-xl font-bold text-blue-500 text-center my-6">
-                    Câu hỏi {currentQuestionIndex + 1}/{data.questions.length}
+                    Câu hỏi {currentQuestionIndex + 1}/{totalQuestions}
                 </h2>
             </header>
 
             {/* Main Content */}
             <main className="w-full max-w-4xl flex-grow">
-                {/* Timer Display */}
                 <div className="text-center mb-4">
                     <div className="text-lg font-semibold text-black">
                         Thời gian: {formatElapsedTime(elapsedTime)}
@@ -265,7 +351,9 @@ const StartExam = () => {
                         {currentQuestion.explanation}
                     </p>
                 )}
-                {submitError && <p className="text-red-500 text-center mb-4">{submitError}</p>}
+                {(submitError || errorMessage) && (
+                    <p className="text-red-500 text-center mb-4">{submitError || errorMessage}</p>
+                )}
                 <div className="flex justify-center">
                     {isChecked ? (
                         <button
@@ -293,75 +381,69 @@ const StartExam = () => {
                 <div className="fixed inset-0 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg border border-gray-200">
                         <h2 className="text-2xl font-bold text-center mb-4">Kết quả bài thi</h2>
+                        <p className="text-lg text-center mb-4 text-gray-600">
+                            {floatboxReason === 'time'
+                                ? 'Nộp do hết thời gian'
+                                : floatboxReason === 'lives'
+                                ? 'Nộp do hết lượt chơi'
+                                : floatboxReason === 'error'
+                                ? 'Lỗi hệ thống'
+                                : 'Nộp bài thi'}
+                        </p>
+                        {floatboxReason && floatboxReason !== 'error' && (
+                            <p className="text-lg text-center mb-4 text-red-600">
+                                {floatboxReason === 'time'
+                                    ? `Bạn đã vượt quá thời gian cho phép (${formatElapsedTime(
+                                          data.lesson?.time_limit || 0
+                                      )}).`
+                                    : 'Bạn đã hết lượt chơi. Vui lòng thử lại sau.'}
+                            </p>
+                        )}
+                        {floatboxReason === 'error' && (
+                            <p className="text-lg text-center mb-4 text-red-600">
+                                {errorMessage || 'Có lỗi xảy ra khi xử lý bài thi.'}
+                                {results.length === 0 && ' Bạn hãy làm ít nhất 1 câu để có thể lưu kết quả.'}
+                            </p>
+                        )}
                         <div className="text-center mb-4">
+                            <p
+                                className={`text-3xl font-bold ${
+                                    score > 60 ? 'text-blue-500' : 'text-red-500'
+                                }`}
+                            >
+                                Điểm: {score.toFixed(2)}/100
+                            </p>
                             <p className="text-lg">Số câu đúng: {correctCount}/{totalQuestions}</p>
-                            <p className="text-lg">Điểm: {score.toFixed(2)}/100</p>
                             <p className="text-lg">Thời gian: {formatElapsedTime(elapsedTime)}</p>
                         </div>
                         <div className="max-h-60 overflow-y-auto mb-4">
                             <h3 className="text-lg font-semibold mb-2">Chi tiết câu hỏi:</h3>
-                            <ul className="space-y-2">
-                                {results.map((result, index) => (
-                                    <li
-                                        key={result.questionId}
-                                        className={`flex items-center ${
-                                            result.isCorrect ? 'text-green-600' : 'text-red-600'
-                                        }`}
-                                    >
-                                        <span className="mr-2">
-                                            {result.isCorrect ? (
-                                                <IconCircleCheck stroke={2} size={20} />
-                                            ) : (
-                                                <IconXboxX stroke={2} size={20} />
-                                            )}
-                                        </span>
-                                        <span>
-                                            Câu {index + 1}: {result.questionText}
-                                        </span>
-                                    </li>
-                                ))}
-                            </ul>
+                            {results.length === 0 ? (
+                                <p className="text-gray-600">Chưa có câu trả lời nào.</p>
+                            ) : (
+                                <ul className="space-y-2">
+                                    {results.map((result, index) => (
+                                        <li
+                                            key={result.questionId}
+                                            className={`flex items-center ${
+                                                result.isCorrect ? 'text-green-600' : 'text-red-600'
+                                            }`}
+                                        >
+                                            <span className="mr-2">
+                                                {result.isCorrect ? (
+                                                    <IconCircleCheck stroke={2} size={20} />
+                                                ) : (
+                                                    <IconXboxX stroke={2} size={20} />
+                                                )}
+                                            </span>
+                                            <span>
+                                                Câu {index + 1}: {result.questionText}
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
                         </div>
-                        <div className="flex justify-center">
-                            <button
-                                onClick={() => navigate('/learn')}
-                                className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors"
-                            >
-                                Đóng
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Time Up Floatbox */}
-            {showTimeUpFloatbox && (
-                <div className="fixed inset-0 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg border border-gray-200">
-                        <h2 className="text-2xl font-bold text-center mb-4 text-red-600">Hết thời gian!</h2>
-                        <p className="text-lg text-center mb-4">
-                            Bạn đã vượt quá thời gian cho phép ({formatElapsedTime(data.lesson.time_limit)}).
-                        </p>
-                        <div className="flex justify-center">
-                            <button
-                                onClick={() => navigate('/learn')}
-                                className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors"
-                            >
-                                Quay lại
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Lives Up Floatbox */}
-            {showLivesUpFloatbox && (
-                <div className="fixed inset-0 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg border border-gray-200">
-                        <h2 className="text-2xl font-bold text-center mb-4 text-red-600">Hết lượt chơi!</h2>
-                        <p className="text-lg text-center mb-4">
-                            Bạn đã hết lượt chơi. Vui lòng thử lại sau.
-                        </p>
                         <div className="flex justify-center">
                             <button
                                 onClick={() => navigate('/learn')}
