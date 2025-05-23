@@ -21,6 +21,14 @@ const Learn = () => {
   const [statsLoaded, setStatsLoaded] = useState(false);
   const [statsLoading, setStatsLoading] = useState(false);
 
+  useEffect(() => {
+    if (progressData) {
+      console.log('Progress data in component:', JSON.stringify(progressData.completion_status, null, 2));
+    } else {
+      console.log("progressData is null or undefined");
+    }
+  }, [progressData]);
+
   // Load learning stats once on mount
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -267,7 +275,7 @@ const Learn = () => {
         </div>
         <div className="flex flex-col items-center gap-12 mt-10 px-4 py-8 overflow-y-auto min-h-screen">
           {lessonGroups.map((group, groupIdx) => {
-            const isOddGroup = groupIdx % 2 !== 0; 
+            const isOddGroup = groupIdx % 2 !== 0;
             const colorScheme = getGroupColor(groupIdx);
             return (
               <div key={groupIdx} className="relative flex flex-col items-center gap-10">
