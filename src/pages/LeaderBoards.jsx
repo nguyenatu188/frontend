@@ -137,14 +137,13 @@ const LeaderBoards = () => {
             {currentLeaderboardData.length > 0 ? (
               currentLeaderboardData.map((user) => (
                 <li
-                  key={user.user_id} 
+                  key={user.user_id}
                   className="flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer"
                   onClick={() => handleUserClick(user)}
                 >
                   <div className="flex items-center gap-2">
-                    {/* Ảnh đại diện người dùng */}
                     <img
-                      src={user.avatar} 
+                      src={`http://127.0.0.1:8000/storage/avatars/${user.avatar}`} 
                       alt={`${user.username} avatar`}
                       className="h-12 w-12 rounded-full object-cover"
                     />
@@ -192,7 +191,7 @@ const LeaderBoards = () => {
           {userRank ? (
             <>
               <img
-                src={userRank.avatar || getRankImage(userRank.rank)} // Ưu tiên avatar của userRank, nếu không có thì dùng ảnh rank
+                src={userRank.avatar ? `http://127.0.0.1:8000/storage/avatars/${userRank.avatar}` : getRankImage(userRank.rank)} // Ưu tiên avatar của userRank, nếu không có thì dùng ảnh rank
                 alt="My rank icon"
                 className="h-12 w-12 rounded-full object-cover"
               />
