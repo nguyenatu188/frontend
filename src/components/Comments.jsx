@@ -5,7 +5,7 @@ import { useAuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const Comments = ({ lessonId }) => {
-  const { comments, loading, addComment } = useComments(lessonId);
+  const { comments, loading, addComment, deleteComment, addingLoading, updateComment, updatingLoading } = useComments(lessonId);
   const [newComment, setNewComment] = useState('');
   const { authUser } = useAuthContext();
   const navigate = useNavigate();
@@ -16,7 +16,7 @@ const Comments = ({ lessonId }) => {
 
   const handleAddComment = () => {
     if (newComment.trim()) {
-      addComment(newComment, null, userFullName, userAvatar, userName); // name truyền để reply dùng
+      addComment(newComment, null, userFullName, userAvatar, userName);
       setNewComment('');
     }
   };
@@ -52,9 +52,14 @@ const Comments = ({ lessonId }) => {
         />
         <button
           onClick={handleAddComment}
-          className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
+          className={`px-4 py-2 text-sm rounded-md transition-colors ${
+            addingLoading || !newComment.trim()
+              ? "bg-gray-400 cursor-not-allowed" 
+              : "bg-blue-600 hover:bg-blue-700 text-white"
+          }`}
+          disabled={addingLoading || !newComment.trim()}
         >
-          Gửi
+          {addingLoading ? "Đang gửi..." : "Gửi"}
         </button>
       </div>
 
@@ -69,6 +74,9 @@ const Comments = ({ lessonId }) => {
             comment={comment}
             onReply={(content, parentId) => addComment(content, parentId, userFullName, userAvatar, userName)}
             allNames={allNames}
+            onDelete={deleteComment}
+            onUpdate={updateComment}
+            updatingLoading={updatingLoading}
           />
         ))
       )}

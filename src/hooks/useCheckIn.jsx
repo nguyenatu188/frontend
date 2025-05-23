@@ -20,14 +20,15 @@ const useCheckIn = () => {
 
     const result = await response.json();
     if (result.success && Array.isArray(result.data)) {
-      const dates = result.data.map(item => item.checkin_date); // yyyy-MM-dd
+      const dates = result.data.map(item => item.checkin_date);
       setCheckedInDates(dates);
     } else {
-      setCheckedInDates([]); // không có ngày điểm danh nào
+      setCheckedInDates([]);
     }
   } catch (err) {
     setError('Không thể tải dữ liệu điểm danh');
     setCheckedInDates([]);
+    console.log(err);
   } finally {
     setLoading(false);
   }

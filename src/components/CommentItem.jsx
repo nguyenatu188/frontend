@@ -1,12 +1,18 @@
 import { useState, useEffect, useRef } from 'react'
+import { FaTrash } from "react-icons/fa"
+import { FaEdit } from "react-icons/fa"
+import { useAuthContext } from '../context/AuthContext'
 
-const CommentItem = ({ comment, onReply, allNames }) => {
-  const [likes, setLikes] = useState(0)
-  const [dislikes, setDislikes] = useState(0)
-  const [userReacted, setUserReacted] = useState(null)
+const CommentItem = ({ comment, onReply, allNames, onDelete, onUpdate, updatingLoading }) => {
   const [showReply, setShowReply] = useState(false)
   const [replyContent, setReplyContent] = useState('')
   const replyInputRef = useRef(null)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedContent, setEditedContent] = useState('');
+
+  const { authUser } = useAuthContext()
 
   useEffect(() => {
     if (showReply && replyInputRef.current) {
@@ -40,6 +46,16 @@ const CommentItem = ({ comment, onReply, allNames }) => {
     })
   }
 
+  const handleConfirmEdit = async () => {
+    if (!editedContent.trim()) return;
+    try {
+      await onUpdate(comment.id, editedContent);
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Lỗi cập nhật:', error);
+    }
+  };
+
   return (
     <div className="ml-5 mt-4">
       <div className="flex items-start gap-3">
@@ -48,37 +64,93 @@ const CommentItem = ({ comment, onReply, allNames }) => {
           alt="avatar"
           className="w-10 h-10 rounded-full object-cover"
         />
-        <div>
-          <span className='font-semibold text-lg text-blue-600'>{comment.username}</span>
-          <span className="font-semibold text-sm text-blue-600"> ({comment.name})</span>
-          <div className="text-xs text-gray-700">{comment.time}</div>
-          <p className="mt-1 text-gray-700">{renderContent(comment.content)}</p>
-          <div className="flex gap-3 text-sm text-gray-700 mt-2">
-            <button
-              onClick={() => {
-                if (userReacted === 'like') return
-                if (userReacted === 'dislike') setDislikes(dislikes - 1)
-                setLikes(likes + 1)
-                setUserReacted('like')
-              }}
-              className="hover:underline"
-            >
-              👍 {likes}
-            </button>
-            <button
-              onClick={() => {
-                if (userReacted === 'dislike') return
-                if (userReacted === 'like') setLikes(likes - 1)
-                setDislikes(dislikes + 1)
-                setUserReacted('dislike')
-              }}
-              className="hover:underline"
-            >
-              👎 {dislikes}
-            </button>
-            <button onClick={() => setShowReply(true)} className="hover:underline text-gray-700">
-              💬 Trả lời
-            </button>
+        <div className="flex-1">
+          <div className="flex flex-row items-center justify-between gap-2">
+            <div>
+              <span className='font-semibold text-lg text-blue-600'>{comment.username}</span>
+              <span className="font-semibold text-sm text-blue-600"> ({comment.name})</span>
+              <div className="text-xs text-gray-700">{comment.time}</div>
+              {isEditing ? (
+                <div className="mt-2">
+                  <input
+                    value={editedContent}
+                    onChange={(e) => setEditedContent(e.target.value)}
+                    className="w-full px-3 py-2 border rounded-md text-gray-700"
+                    onKeyDown={(e) => e.key === 'Enter' && handleConfirmEdit()}
+                  />
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      onClick={() => setIsEditing(false)}
+                      className="px-3 py-1 bg-gray-500 rounded-md hover:bg-gray-600"
+                      disabled={updatingLoading}
+                    >
+                      Hủy
+                    </button>
+                    <button
+                      onClick={handleConfirmEdit}
+                      className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-700"
+                      disabled={updatingLoading}
+                    >
+                      {updatingLoading ? 'Đang lưu...' : 'Lưu'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p className="mt-1 text-gray-700">{renderContent(comment.content)}</p>
+              )}
+              <div className="flex gap-3 text-sm text-gray-700 mt-2">
+                <button onClick={() => setShowReply(true)} className="hover:underline text-gray-700">
+                  💬 Trả lời
+                </button>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              {authUser?.username === comment.username && (
+                <button 
+                  className="btn btn-sm btn-outline btn-primary"
+                  onClick={() => {
+                    setIsEditing(true);
+                    setEditedContent(comment.content);
+                  }}
+                  disabled={isEditing}
+                >
+                  <FaEdit />
+                </button>
+              )}
+              {(authUser?.username === comment.username || authUser.role_id === 1) && (
+                <button
+                  className="btn btn-sm btn-outline btn-error"
+                  onClick={() => setShowDeleteModal(true)}
+                  disabled={isEditing}
+                >
+                  <FaTrash />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className={`modal ${showDeleteModal ? 'modal-open' : ''}`}>
+            <div className="modal-box">
+              <h3 className="font-bold text-lg">Xóa bình luận</h3>
+              <p className="py-4">Bạn có chắc chắn muốn xóa bình luận này không?</p>
+              <div className="modal-action">
+                <button 
+                  className="btn"
+                  onClick={() => setShowDeleteModal(false)}
+                >
+                  Hủy
+                </button>
+                <button 
+                  className="btn btn-error"
+                  onClick={() => {
+                    onDelete(comment.id)
+                    setShowDeleteModal(false)
+                  }}
+                >
+                  Xóa
+                </button>
+              </div>
+            </div>
           </div>
 
           {showReply && (
