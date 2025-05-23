@@ -10,7 +10,7 @@ const StartExam = () => {
     const navigate = useNavigate();
     const parsedLessonId = parseInt(lessonId, 10);
     const { data, loading, error } = useQuestion(parsedLessonId || 0);
-    const { data: progressStats, getLearningStats, submitAnswer, finalizeLessonProgress, loading: submitLoading, error: submitError } = useUserProgress();
+    const { statsData, getLearningStats, submitAnswer, finalizeLessonProgress, loading: submitLoading, error: submitError } = useUserProgress();
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [selectedOption, setSelectedOption] = useState(null);
     const [isChecked, setIsChecked] = useState(false);
@@ -31,7 +31,7 @@ const StartExam = () => {
             setIsStatsFetching(true);
             getLearningStats(token)
                 .catch((err) => {
-                    setErrorMessage('Lỗi khi lấy dữ liệu lượt chơi: ' + err.message);
+                    setErrorMessage('Lỗi khi lấy dữ liệu lives: ' + err.message);
                 })
                 .finally(() => {
                     setIsStatsFetching(false);
@@ -124,11 +124,11 @@ const StartExam = () => {
 
     // Check lives
     useEffect(() => {
-        if (progressStats?.lives === 0 && timerActive) {
+        if (statsData?.lives === 0 && timerActive) {
             setTimerActive(false);
             autoCompleteExam('lives');
         }
-    }, [progressStats?.lives, timerActive]);
+    }, [statsData?.lives, timerActive]);
 
     // Handle invalid lessonId or data issues
     if (!lessonId || isNaN(parsedLessonId)) {
@@ -275,7 +275,7 @@ const StartExam = () => {
                     </div>
                     <div className="flex items-center space-x-2">
                         <span className="text-red-400 text-xl">❤️</span>
-                        <span className="text-black">{progressStats?.lives ?? 0}</span>
+                        <span className="text-black">{statsData?.lives ?? 0}</span>
                     </div>
                 </div>
                 <h2 className="text-xl font-bold text-blue-500 text-center my-6">
@@ -385,7 +385,7 @@ const StartExam = () => {
                             {floatboxReason === 'time'
                                 ? 'Nộp do hết thời gian'
                                 : floatboxReason === 'lives'
-                                ? 'Nộp do hết lượt chơi'
+                                ? 'Nộp do hết lives'
                                 : floatboxReason === 'error'
                                 ? 'Lỗi hệ thống'
                                 : 'Nộp bài thi'}
@@ -396,7 +396,7 @@ const StartExam = () => {
                                     ? `Bạn đã vượt quá thời gian cho phép (${formatElapsedTime(
                                           data.lesson?.time_limit || 0
                                       )}).`
-                                    : 'Bạn đã hết lượt chơi. Vui lòng thử lại sau.'}
+                                    : 'Bạn đã hết lives. Vui lòng thử lại sau.'}
                             </p>
                         )}
                         {floatboxReason === 'error' && (
