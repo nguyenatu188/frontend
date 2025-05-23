@@ -31,7 +31,7 @@ const Learn = () => {
     console.log("Category:", category);
     console.log("Lessons state:", lessons);
     console.log("Lesson IDs:", lessons.map(l => l.lesson_id));
-    console.log("progressData:", progressData);
+    console.log("progressData:", progressData, "Type:", Array.isArray(progressData) ? "Array" : typeof progressData);
     console.log("statsData:", statsData);
   }, [category, lessons, progressData, statsData]);
 
@@ -72,8 +72,29 @@ const Learn = () => {
 
   const handleLessonClick = (lesson) => {
     console.log("Clicked lesson:", lesson);
-    const lessonProgress = progressData?.find(p => p.lesson_id == lesson.lesson_id);
+    const lessonProgress = Array.isArray(progressData) ? progressData.find(p => p.lesson_id == lesson.lesson_id) : null;
     console.log("Progress for lesson ID", lesson.lesson_id, ":", lessonProgress || "No progress");
+
+    // Find the index of the current lesson
+    const lessonIndex = lessons.findIndex(l => l.lesson_id === lesson.lesson_id);
+
+    // The first lesson (index 0) is always unlocked
+    if (lessonIndex === 0) {
+      setSelectedLesson(lesson);
+      setShowFloatbox(true);
+      return;
+    }
+
+    // Check if the previous lesson is completed
+    const previousLesson = lessons[lessonIndex - 1];
+    const previousLessonProgress = Array.isArray(progressData) ? progressData.find(p => p.lesson_id == previousLesson.lesson_id) : null;
+
+    if (!previousLessonProgress || previousLessonProgress.completion_status !== 'Completed') {
+      setErrorMessage(`Bạn cần hoàn thành bài học "${previousLesson.title}" trước khi bắt đầu bài này.`);
+      setShowLivesError(true);
+      return;
+    }
+
     setSelectedLesson(lesson);
     setShowFloatbox(true);
   };
@@ -208,7 +229,7 @@ const Learn = () => {
     const colorScheme = groupIdx !== -1 ? getGroupColor(Math.floor(groupIdx / 5)) : getGroupColor(0);
 
     // Check if the lesson is completed and get the score
-    const lessonProgress = progressData?.find(p => p.lesson_id == lessonId);
+    const lessonProgress = Array.isArray(progressData) ? progressData.find(p => p.lesson_id == lessonId) : null;
     const isCompleted = lessonProgress?.completion_status === 'Completed';
     const score = isCompleted ? lessonProgress?.score.toFixed(2) : null;
     return (
@@ -251,8 +272,9 @@ const Learn = () => {
       </div>
     );
   };
+
   // Handle loading, error, no lessons, or data loading
-  if (loading || lessonError || lessons.length === 0 || statsLoading || progressLoading || progressError) {
+  if (loading || lessonError || lessons.length === 0 || statsLoading || progressLoading || progressError || !Array.isArray(progressData)) {
     return <Loading />;
   }
 
@@ -280,41 +302,48 @@ const Learn = () => {
         </div>
         <div className="flex flex-col items-center gap-12 mt-10 px-4 py-8 overflow-y-auto min-h-screen">
           {lessonGroups.map((group, groupIdx) => {
-            const isOddGroup = groupIdx % 2 !== 0;
             const colorScheme = getGroupColor(groupIdx);
             return (
               <div key={groupIdx} className="relative flex flex-col items-center gap-10">
                 {group.map((lesson, idx) => {
                   const totalIdx = groupIdx * 5 + idx;
                   const isLastInGroup = idx === group.length - 1;
-                  const lessonProgress = progressData?.find(p => p.lesson_id == lesson.lesson_id);
+                  const lessonProgress = Array.isArray(progressData) ? progressData.find(p => p.lesson_id == lesson.lesson_id) : null;
                   const isCompleted = lessonProgress?.completion_status === 'Completed';
+                  const lessonIndex = lessons.findIndex(l => l.lesson_id === lesson.lesson_id);
+                  const isLocked = lessonIndex > 0 && 
+                    (!Array.isArray(progressData) || 
+                     !progressData.find(p => p.lesson_id == lessons[lessonIndex - 1].lesson_id) ||
+                     progressData.find(p => p.lesson_id == lessons[lessonIndex - 1].lesson_id).completion_status !== 'Completed');
+
                   return (
                     <div key={lesson.lesson_id} className="relative flex flex-col items-center">
                       <button
                         ref={(el) => (lessonRefs.current[totalIdx] = el)}
-                        className={`press-button w-42 h-42 ${colorScheme.bg} rounded-full flex flex-col items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.25)] ${colorScheme.hover} transition-colors z-10 text-white text-sm font-semibold text-center p-2 relative`}
-                        onClick={() => handleLessonClick(lesson)}
+                        className={`press-button w-42 h-42 rounded-full flex flex-col items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.25)] transition-colors z-10 text-white text-sm font-semibold text-center p-2 relative
+                          ${isLocked ? 'bg-gray-400 cursor-not-allowed' : `${colorScheme.bg} ${colorScheme.hover}`}`}
+                        onClick={() => !isLocked && handleLessonClick(lesson)}
+                        disabled={isLocked}
                       >
-                        {/* Hiển thị tiêu đề bài học */}
                         <span className="text-md mb-1 line-clamp-2">{lesson.title}</span>
-
-                        {/* Hiển thị trạng thái và điểm số nếu đã hoàn thành */}
                         {isCompleted && (
-                          <>
-                            <div className="completed-badge">
-                              <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
-                            </div>
-                          </>
+                          <div className="completed-badge">
+                            <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                        )}
+                        {isLocked && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3-9H9V6c0-1.66 1.34-3 3-3s3 1.34 3 3v2z" />
+                            </svg>
+                          </div>
                         )}
                       </button>
-
                       {!isLastInGroup && (
                         <div className={`h-10 mt-10 border-l-4 border-dashed ${colorScheme.bg} mx-auto`}></div>
                       )}
-
                       {showFloatbox && selectedLesson?.lesson_id === lesson.lesson_id && renderFloatbox(
                         {
                           title: selectedLesson.title,
@@ -326,20 +355,18 @@ const Learn = () => {
                         ],
                         lesson.lesson_id
                       )}
-
                       {showLivesError && selectedLesson?.lesson_id === lesson.lesson_id && renderFloatbox(
                         {
-                          title: "Hết lives",
+                          title: isLocked ? "Bài học bị khóa" : "Hết lives",
                           message: errorMessage,
                           isError: true,
                         },
                         [{ label: "Đóng", onClick: closeFloatbox }],
                         lesson.lesson_id
                       )}
-
                       {idx === 2 && (
                         <div
-                          className={`absolute w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center animate-bounce mt-2 ${isOddGroup ? "right-48" : "left-48"}`}
+                          className="absolute w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center animate-bounce mt-2 left-48"
                         >
                           <svg className={`w-12 h-12 ${colorScheme.text}`} fill="currentColor" viewBox="0 0 24 24">
                             <path d="M12 2c5.52 0 10 4.48 10 10s-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2zm0 2c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zm0 14c2.76 0 5-2.24 5-5h-2c0 1.66-1.34 3-3 3s-3-1.34-3-3H7c0 2.76 2.24 5 5 5z" />
