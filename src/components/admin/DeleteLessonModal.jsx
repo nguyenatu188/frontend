@@ -12,10 +12,10 @@ const DeleteLessonModal = ({
     <dialog className={`modal ${showDeleteModal ? 'modal-open' : ''}`}>
       <div className="modal-box">
         <h3 className="font-bold text-lg">Xác nhận xóa</h3>
-        <p className="py-4">
+        <p className="py-2">
           Bạn có chắc chắn muốn xóa bài học "{selectedLessonToDelete?.title}"?
           <br />
-          <span className="text-red-500">Hành động này không thể hoàn tác!</span>
+          <span className="text-red-400">Hành động này không thể hoàn tác!</span>
         </p>
         
         <div className="modal-action">

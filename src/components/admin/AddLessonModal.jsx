@@ -5,6 +5,8 @@ const AddLessonModal = ({
   setShowAddModal,
   newLessonTitle,
   setNewLessonTitle,
+  newLessonTimeLimit,
+  setNewLessonTimeLimit,
   handleAddLesson,
   isSubmitting
 }) => {
@@ -25,6 +27,18 @@ const AddLessonModal = ({
             className="input input-bordered w-full"
             disabled={isSubmitting}
           />
+          <label className="label mt-4">
+            <span className="label-text">Thời gian làm bài</span>
+            <span className="label-text-alt"> (giây)</span>
+          </label>
+          <input
+            type="number"
+            value={newLessonTimeLimit}
+            onChange={(e) => setNewLessonTimeLimit(e.target.value)}
+            placeholder="Nhập thời gian làm bài..."
+            className="input input-bordered w-full"
+            disabled={isSubmitting}
+          />
         </div>
 
         <div className="modal-action">
@@ -33,6 +47,7 @@ const AddLessonModal = ({
             onClick={() => {
               setShowAddModal(false)
               setNewLessonTitle('')
+              setNewLessonTimeLimit()
             }}
             disabled={isSubmitting}
           >
@@ -41,7 +56,7 @@ const AddLessonModal = ({
           <button
             className="btn btn-primary"
             onClick={handleAddLesson}
-            disabled={isSubmitting || !newLessonTitle.trim()}
+            disabled={isSubmitting || !newLessonTitle.trim() || !newLessonTimeLimit}
           >
             {isSubmitting ? (
               <>

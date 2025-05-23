@@ -23,6 +23,7 @@ const LessonsManagement = () => {
   
   const [showAddModal, setShowAddModal] = useState(false)
   const [newLessonTitle, setNewLessonTitle] = useState('')
+  const [newLessonTimeLimit, setNewLessonTimeLimit] = useState()
   const { createLesson, isSubmitting } = useAddLesson()
 
   const [showDeleteModal, setShowDeleteModal] = useState(false)
@@ -31,6 +32,7 @@ const LessonsManagement = () => {
 
   const [showUpdateModal, setShowUpdateModal] = useState(false)
   const [editedTitle, setEditedTitle] = useState('')
+  const [editedTimeLimit, setEditedTimeLimit] = useState()
   const [selectedLessonToUpdate, setSelectedLessonToUpdate] = useState(null)
   const { updateLesson, isSubmitting: isUpdating } = useUpdateLesson()
   
@@ -62,7 +64,8 @@ const LessonsManagement = () => {
     try {
       await createLesson({
         title: newLessonTitle,
-        category: category
+        category: category,
+        time_limit: newLessonTimeLimit
       })
       
       toast.success('Tạo bài học thành công!')
@@ -96,11 +99,12 @@ const LessonsManagement = () => {
   }
 
   const handleUpdateLesson = async () => {
-    if (!selectedLessonToUpdate || !editedTitle.trim()) return
+    if (!selectedLessonToUpdate || !editedTitle.trim() || !editedTimeLimit) return
     
     try {
       await updateLesson(selectedLessonToUpdate.lesson_id, {
-        title: editedTitle
+        title: editedTitle,
+        time_limit: editedTimeLimit
       })
       
       toast.success('Cập nhật bài học thành công!')
@@ -235,6 +239,7 @@ const LessonsManagement = () => {
                             onClick={() => {
                               setSelectedLessonToUpdate(lesson)
                               setEditedTitle(lesson.title)
+                              setEditedTimeLimit(lesson.time_limit)
                               setShowUpdateModal(true)
                             }}
                           >
@@ -285,6 +290,8 @@ const LessonsManagement = () => {
         setShowAddModal={setShowAddModal}
         newLessonTitle={newLessonTitle}
         setNewLessonTitle={setNewLessonTitle}
+        newLessonTimeLimit={newLessonTimeLimit}
+        setNewLessonTimeLimit={setNewLessonTimeLimit}
         handleAddLesson={handleAddLesson}
         isSubmitting={isSubmitting}
       />
@@ -305,6 +312,8 @@ const LessonsManagement = () => {
         setSelectedLessonToUpdate={setSelectedLessonToUpdate}
         editedTitle={editedTitle}
         setEditedTitle={setEditedTitle}
+        editedTimeLimit={editedTimeLimit}
+        setEditedTimeLimit={setEditedTimeLimit}
         handleUpdateLesson={handleUpdateLesson}
         isUpdating={isUpdating}
       />

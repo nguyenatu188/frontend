@@ -1,38 +1,40 @@
 import { useState } from 'react'
 import { useAuthContext } from '../../../context/AuthContext'
 
-const useUpdateLesson = () => {
+const useUpdateQuestion = () => {
   const { fetchWithAuth } = useAuthContext()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState(null)
 
-  const updateLesson = async (lessonId, lessonData) => {
+  const updateQuestion = async (questionId, questionData) => {
     try {
-      if (!lessonData.title?.trim()) {
-        throw new Error('Tiêu đề bài học không được để trống')
-      }
-      if (!lessonData.time_limit && typeof lessonData.time_limit !== 'number') {
-        throw new Error('Thời gian làm bài trống hoặc không phải là số')
+      // Validate required fields
+      if (!questionData.question_text?.trim()) {
+        throw new Error('Nội dung câu hỏi không được để trống')
       }
 
       setIsSubmitting(true)
       setError(null)
 
+      // Gửi request PUT đến API
       const response = await fetchWithAuth(
-        `http://127.0.0.1:8000/api/v1/lessons/${lessonId}`,
+        `http://127.0.0.1:8000/api/v1/questions/${questionId}`,
         {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(lessonData)
+          body: JSON.stringify({
+            question_text: questionData.question_text,
+            explanation: questionData.explanation
+          })
         }
       )
 
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.message || 'Cập nhật bài học thất bại')
+        throw new Error(data.message || 'Cập nhật câu hỏi thất bại')
       }
       
       return data
@@ -44,7 +46,7 @@ const useUpdateLesson = () => {
     }
   }
 
-  return { updateLesson, isSubmitting, error }
+  return { updateQuestion, isSubmitting, error }
 }
 
-export default useUpdateLesson
+export default useUpdateQuestion

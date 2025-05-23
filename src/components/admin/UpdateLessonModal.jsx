@@ -5,6 +5,8 @@ const UpdateLessonModal = ({
   setShowUpdateModal,
   editedTitle,
   setEditedTitle,
+  editedTimeLimit,
+  setEditedTimeLimit,
   handleUpdateLesson,
   isUpdating,
   setSelectedLessonToUpdate
@@ -22,6 +24,18 @@ const UpdateLessonModal = ({
             value={editedTitle}
             onChange={(e) => setEditedTitle(e.target.value)}
             placeholder="Nhập tiêu đề..."
+            className="input input-bordered w-full"
+            disabled={isUpdating}
+          />
+          <label className="label mt-4">
+            <span className="label-text">Thời gian làm bài</span>
+            <span className="label-text-alt"> (giây)</span>
+          </label>
+          <input
+            type="number"
+            value={editedTimeLimit}
+            onChange={(e) => setEditedTimeLimit(e.target.value)}
+            placeholder="Nhập thời gian làm bài"
             className="input input-bordered w-full"
             disabled={isUpdating}
           />

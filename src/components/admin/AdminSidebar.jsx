@@ -1,11 +1,10 @@
 import { NavLink } from "react-router-dom"
-import { ChartArea, UserCog, BookOpenCheck } from 'lucide-react'
+import { UserCog, BookOpenCheck } from 'lucide-react'
 import useLogout from '../../hooks/useLogout'
 
 const navItems = [
-  { label: "Thống kê", icon: <ChartArea size={20} color="#4DA8FF" />, to: "/statistics" },
-  { label: "Quản lý người dùng", icon: <UserCog size={20} color="#4ECDC4" />, to: "/users-management" },
   { label: "Quản lý bài học", icon: <BookOpenCheck size={20} color="#45B7D1" />, to: "/lessons-management" },
+  { label: "Quản lý người dùng", icon: <UserCog size={20} color="#4ECDC4" />, to: "/users-management" },
 ]
 
 const AdminSidebar = () => {
@@ -15,7 +14,7 @@ const AdminSidebar = () => {
     <div className="flex flex-col justify-between h-screen w-64 bg-white shadow-lg border-r border-blue-100 p-4 fixed">
       <div className="flex flex-col">
         <h2 className="text-2xl font-bold text-blue-500 mb-8 text-center">HELL ADMIN</h2>
-        <nav className="flex flex-col gap-2">
+        <nav className="flex flex-col gap-2"> 
           {navItems.map((item, index) => (
             <NavLink
               key={index}

@@ -4,6 +4,7 @@ const useQuestion = (lessonId) => {
   const [data, setData] = useState({ lesson: null, questions: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [trigger, setTrigger] = useState(0);
 
   const getLessonWithQuestions = useCallback(async (lessonId, token, signal) => {
     try {
@@ -53,9 +54,14 @@ const useQuestion = (lessonId) => {
     getLessonWithQuestions(lessonId, token, controller.signal);
 
     return () => controller.abort();
-  }, [lessonId, getLessonWithQuestions]);
+  }, [lessonId, getLessonWithQuestions, trigger])
+  
+  const refetch = useCallback(() => {
+    setData({ lesson: null, questions: [] })
+    setTrigger((prev) => prev + 1)
+  }, [])
 
-  return { data, loading, error };
+  return { data, loading, error, refetch };
 };
 
 export default useQuestion;

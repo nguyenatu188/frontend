@@ -14,6 +14,9 @@ const useAddLesson = () => {
       if (!lessonData.category?.trim()) {
         throw new Error('Danh mục bài học không được để trống')
       }
+      if (!lessonData.time_limit && typeof lessonData.time_limit !== 'number') {
+        throw new Error('Thời gian làm bài để trống hoặc khong phải là số')
+      }
 
       setIsSubmitting(true)
       setError(null)

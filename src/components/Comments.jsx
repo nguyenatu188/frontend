@@ -39,7 +39,7 @@ const Comments = ({ lessonId }) => {
       <div className="flex items-center gap-3 mb-5 p-4 border border-gray-200 rounded-lg bg-white shadow-sm">
         <img
           src={`http://127.0.0.1:8000/storage/avatars/${authUser.avatar}`}
-          onClick={authUser.role_id === 2 ? () => navigate(`/profile`) : () => navigate(`/statistics`)}
+          onClick={authUser.role_id === 2 ? () => navigate(`/profile`) : () => navigate(`/lessons-management`)}
           className="w-10 h-10 rounded-full object-cover cursor-pointer"
         />
         <input

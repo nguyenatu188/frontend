@@ -14,7 +14,6 @@ import LeaderBoards  from './pages/LeaderBoards'
 import CheckIn from './pages/CheckIn'
 import StartExam from './pages/StartExam'
 import Review from './pages/Review'
-import Statistics from './pages/Admin/Statistics'
 import UserManagement from './pages/Admin/UsersManagement'
 import LessonsManagement from './pages/Admin/LessonsManagement'
 import LessonDetails from './pages/Admin/LessonDetails'
@@ -30,7 +29,7 @@ function App() {
 
   const getRedirectPath = () => {
     if (!authUser) return "/login"
-    return authUser.role_id === 1 ? "/statistics" : "/learn"
+    return authUser.role_id === 1 ? "/lessons-management" : "/learn"
   }
 
   const RoleBasedNavigate = () => <Navigate to={getRedirectPath()} />
@@ -62,10 +61,6 @@ function App() {
         />
 
         {/* route chỉ dành cho admin */}
-        <Route 
-          path="/statistics" 
-          element={authUser?.role_id === 1 ? <Statistics /> : <Navigate to="/login" />} 
-        />
         <Route 
           path="/users-management" 
           element={authUser?.role_id === 1 ? <UserManagement /> : <Navigate to="/login" />} 
