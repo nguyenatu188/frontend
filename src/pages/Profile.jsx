@@ -13,6 +13,21 @@ import RightSidebar from '../components/RightSidebar'
 import EditProfileModal from '../components/EditProfileModal'
 import ChangePasswordModal from '../components/ChangePasswordModal'
 
+import bronzeImg from '../assets/bronze.jpg'
+import silverImg from '../assets/silver.jpg'
+import goldImg from '../assets/gold.jpg'
+import platinumImg from '../assets/platinum.jpg'
+import diamondImg from '../assets/diamond.jpg'
+import useLeaderboard from '../hooks/useLeaderboard'
+
+const rankTiers = [
+  { name: 'Bronze', image: bronzeImg },
+  { name: 'Silver', image: silverImg },
+  { name: 'Gold', image: goldImg },
+  { name: 'Platinum', image: platinumImg },
+  { name: 'Diamond', image: diamondImg }, 
+];
+
 const Profile = () => {
   const { logout, loading: logoutLoading } = useLogout()
   const { authUser } = useAuthContext()
@@ -26,6 +41,8 @@ const Profile = () => {
   })
   const { updateProfile, isUpdating, error: updateError } = useProfileUpdate()
 
+  const { userRank } = useLeaderboard()
+
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [currentPass, setCurrentPass] = useState('')
   const [newPass, setNewPass] = useState('')
@@ -33,6 +50,11 @@ const Profile = () => {
   const { changePassword, isChanging, error: passwordError, isSuccess } = usePasswordChange()
 
   const handleLogout = () => logout()
+
+  const getRankImage = (rankName) => {
+    const tier = rankTiers.find((t) => t.name === rankName);
+    return tier ? tier.image : goldImg; 
+  };
 
   useEffect(() => {
     if (authUser) {
@@ -143,18 +165,31 @@ const Profile = () => {
             <div className="divider divider-info"></div>
 
             <div className="w-full px-8 flex gap-4">
-              <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+              <div className="flex flex-col items-center justify-center bg-white p-4 rounded-lg shadow-sm border border-gray-200">
                 <h3 className="text-sm text-gray-500 mb-1">Current Streak</h3>
                 <p className="text-2xl font-bold text-blue-600">{authUser.current_streak} 🔥</p>
               </div>
 
-              <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+              <div className="flex flex-col items-center justify-center bg-white p-4 rounded-lg shadow-sm border border-gray-200">
                 <h3 className="text-sm text-gray-500 mb-1">Longest Streak</h3>
                 <p className="text-2xl font-bold text-purple-600">{authUser.longest_streak} 🏆</p>
               </div>
 
               <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center">
-                <span className="text-gray-400 text-sm">Rank</span>
+                {userRank ? (
+                  <div className="flex flex-col items-center justify-center">
+                    <p className={`text-sm text-gray-500 mb-1`}>
+                      Rank: <span className={`font-bold text-gray-500`}>{userRank.rank}</span>
+                    </p>
+                    <img
+                          src={getRankImage(userRank.rank)}
+                          alt={`${userRank.rank} rank icon`}
+                          className="inline-block h-20 w-20 object-contain"
+                    />
+                  </div>
+                ) : (
+                  <p className={`text-lg text-gray-700 text-center w-full`}>Loading...</p>
+                )}
               </div>
             </div>
 

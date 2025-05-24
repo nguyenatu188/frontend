@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import AdminSidebar from '../../components/admin/AdminSidebar'
 import useFriends from '../../hooks/useFriends'
 import { IoMale, IoFemale, IoMaleFemale } from "react-icons/io5"
+import useLeaderboard from '../../hooks/useLeaderboard'
 
 const UsersManagement = () => {
   const { getAllUsers } = useFriends()
@@ -11,11 +12,22 @@ const UsersManagement = () => {
   const [selectedUser, setSelectedUser] = useState(null)
   const [detailPosition, setDetailPosition] = useState({ x: 0, y: 0 })
 
+  const { leaderboard, fetchLeaderboard } = useLeaderboard()
+  const [usernameRankMap, setUsernameRankMap] = useState(new Map())
+
+  const [searchTerm, setSearchTerm] = useState('')
+
+  const filteredUsers = users.filter(user => 
+    user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.full_name.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
   useEffect(() => {
     const loadUsers = async () => {
       try {
         const data = await getAllUsers()
         setUsers(data)
+        await fetchLeaderboard(data.length + 1) // +1 vì get all user không trả về user hiện tại
       } catch (err) {
         setError(err.message)
       } finally {
@@ -23,7 +35,18 @@ const UsersManagement = () => {
       }
     }
     loadUsers()
-  }, [])
+  }, [fetchLeaderboard])
+
+  useEffect(() => {
+    // Tạo map từ leaderboard data
+    const allLeaderboardUsers = Object.values(leaderboard).flat()
+    const newMap = new Map()
+    allLeaderboardUsers.forEach(user => {
+      newMap.set(user.username, user.rank)
+    })
+    setUsernameRankMap(newMap)
+    console.log('Updated usernameRankMap:', usernameRankMap)
+  }, [leaderboard])
 
   const handleMoreClick = (user, event) => {
     setSelectedUser(user)
@@ -46,6 +69,16 @@ const UsersManagement = () => {
       
       <div className='flex flex-col items-center h-screen mx-auto p-8 pl-64'>
         <h1 className='text-2xl font-bold mb-6 text-gray-700'>Quản lý người dùng</h1>
+
+        <div className="w-full max-w-4xl mb-4">
+          <input
+            type="text"
+            placeholder="Tìm kiếm theo username hoặc họ tên"
+            className="w-full px-4 py-2 text-gray-700 border border-gray-700 rounded-lg focus:border-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
         
         <div className='bg-white rounded-lg shadow overflow-hidden'>
           <table className='min-w-full divide-y divide-gray-200'>
@@ -60,7 +93,7 @@ const UsersManagement = () => {
               </tr>
             </thead>
             <tbody className='bg-white divide-y divide-gray-200'>
-              {users.map(user => (
+              {filteredUsers.map(user => (
                 <tr key={user.user_id} className='hover:bg-gray-50'>
                   <td className='px-6 py-4 whitespace-nowrap'>
                     <img 
@@ -91,6 +124,13 @@ const UsersManagement = () => {
                   </td>
                 </tr>
               ))}
+              {filteredUsers.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                    Không tìm thấy người dùng nào
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -113,6 +153,7 @@ const UsersManagement = () => {
                 <p><strong>Longest Streak:</strong> {selectedUser.longest_streak}</p>
                 <p><strong>Coins:</strong> {selectedUser.coins}</p>
                 <p><strong>Ngày tham gia:</strong> {new Date(selectedUser.created_at).toLocaleDateString()}</p>
+                <p><strong>Rank:</strong> {usernameRankMap.get(selectedUser.username) || 'Loading...'}</p>
               </div>
             </div>
           </>
