@@ -10,18 +10,19 @@ const StartExam = () => {
     const navigate = useNavigate();
     const parsedLessonId = parseInt(lessonId, 10);
     const { data, loading, error } = useQuestion(parsedLessonId || 0);
-    const { data: progressStats, getLearningStats, submitAnswer, finalizeLessonProgress, loading: submitLoading, error: submitError } = useUserProgress();
+    const { statsData, getLearningStats, submitAnswer, finalizeLessonProgress, loading: submitLoading, error: submitError } = useUserProgress();
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [selectedOption, setSelectedOption] = useState(null);
     const [isChecked, setIsChecked] = useState(false);
     const [isCorrect, setIsCorrect] = useState(null);
     const [results, setResults] = useState([]);
     const [showFloatbox, setShowFloatbox] = useState(false);
-    const [floatboxReason, setFloatboxReason] = useState(null); // null, 'time', 'lives', 'error'
+    const [floatboxReason, setFloatboxReason] = useState(null);
     const [errorMessage, setErrorMessage] = useState(null);
     const [elapsedTime, setElapsedTime] = useState(0);
     const [timerActive, setTimerActive] = useState(false);
-    const [isStatsFetching, setIsStatsFetching] = useState(false); // Prevent duplicate stats calls
+    const [isStatsFetching, setIsStatsFetching] = useState(false);
+    const [buttonText, setButtonText] = useState('KIỂM TRA'); // New state for button text
     const timerRef = useRef(null);
 
     // Fetch lives on mount (once)
@@ -31,7 +32,7 @@ const StartExam = () => {
             setIsStatsFetching(true);
             getLearningStats(token)
                 .catch((err) => {
-                    setErrorMessage('Lỗi khi lấy dữ liệu lượt chơi: ' + err.message);
+                    setErrorMessage('Lỗi khi lấy dữ liệu lives: ' + err.message);
                 })
                 .finally(() => {
                     setIsStatsFetching(false);
@@ -45,7 +46,7 @@ const StartExam = () => {
                 clearInterval(timerRef.current);
             }
         };
-    }, []); // Empty deps for single mount call
+    }, []);
 
     // Timer logic
     useEffect(() => {
@@ -61,7 +62,7 @@ const StartExam = () => {
         };
     }, [timerActive]);
 
-    // Helper function for auto-completion
+    // Auto-complete exam
     const autoCompleteExam = async (reason) => {
         const token = localStorage.getItem('token');
         if (!token) {
@@ -72,7 +73,6 @@ const StartExam = () => {
         }
 
         try {
-            // Submit current question if unanswered and questions are available
             if (!isChecked && data?.questions?.length > 0 && currentQuestionIndex < data.questions.length) {
                 const question = data.questions[currentQuestionIndex];
                 const response = await submitAnswer(
@@ -93,7 +93,6 @@ const StartExam = () => {
                     },
                 ]);
 
-                // Update lives after submission
                 if (!isStatsFetching) {
                     setIsStatsFetching(true);
                     await getLearningStats(token);
@@ -101,7 +100,6 @@ const StartExam = () => {
                 }
             }
 
-            // Finalize lesson progress
             setTimerActive(false);
             clearInterval(timerRef.current);
             await finalizeLessonProgress(parsedLessonId, token, elapsedTime);
@@ -124,11 +122,11 @@ const StartExam = () => {
 
     // Check lives
     useEffect(() => {
-        if (progressStats?.lives === 0 && timerActive) {
+        if (statsData?.lives === 0 && timerActive) {
             setTimerActive(false);
             autoCompleteExam('lives');
         }
-    }, [progressStats?.lives, timerActive]);
+    }, [statsData?.lives, timerActive]);
 
     // Handle invalid lessonId or data issues
     if (!lessonId || isNaN(parsedLessonId)) {
@@ -165,6 +163,8 @@ const StartExam = () => {
             return;
         }
 
+        setButtonText('ĐANG KIỂM TRA...'); // Update button text to loading state
+
         try {
             const question = data.questions[currentQuestionIndex];
             const selectedOptionData = question.options.find(
@@ -189,8 +189,8 @@ const StartExam = () => {
             setIsCorrect(isAnswerCorrect);
             setIsChecked(true);
             setErrorMessage(null);
+            setButtonText('TIẾP TỤC'); // Update button text to "TIẾP TỤC" after submission
 
-            // Update lives after submission
             if (!isStatsFetching) {
                 setIsStatsFetching(true);
                 await getLearningStats(token);
@@ -198,6 +198,7 @@ const StartExam = () => {
             }
         } catch (err) {
             setErrorMessage('Lỗi khi kiểm tra câu trả lời: ' + err.message);
+            setButtonText('KIỂM TRA'); // Revert to "KIỂM TRA" on error
         }
     };
 
@@ -210,6 +211,7 @@ const StartExam = () => {
             setIsCorrect(null);
             setTimerActive(true);
             setErrorMessage(null);
+            setButtonText('KIỂM TRA'); // Reset button text for the next question
         } else {
             const token = localStorage.getItem('token');
             if (!token) {
@@ -275,7 +277,7 @@ const StartExam = () => {
                     </div>
                     <div className="flex items-center space-x-2">
                         <span className="text-red-400 text-xl">❤️</span>
-                        <span className="text-black">{progressStats?.lives ?? 0}</span>
+                        <span className="text-black">{statsData?.lives ?? 0}</span>
                     </div>
                 </div>
                 <h2 className="text-xl font-bold text-blue-500 text-center my-6">
@@ -370,7 +372,7 @@ const StartExam = () => {
                             disabled={submitLoading || !selectedOption}
                             className="bg-green-500 text-white px-6 py-2 rounded-lg disabled:bg-gray-400 hover:bg-green-600 transition-colors"
                         >
-                            {submitLoading ? 'ĐANG KIỂM TRA...' : 'KIỂM TRA'}
+                            {buttonText} {/* Use dynamic button text */}
                         </button>
                     )}
                 </div>
@@ -385,7 +387,7 @@ const StartExam = () => {
                             {floatboxReason === 'time'
                                 ? 'Nộp do hết thời gian'
                                 : floatboxReason === 'lives'
-                                ? 'Nộp do hết lượt chơi'
+                                ? 'Nộp do hết lives'
                                 : floatboxReason === 'error'
                                 ? 'Lỗi hệ thống'
                                 : 'Nộp bài thi'}
@@ -396,7 +398,7 @@ const StartExam = () => {
                                     ? `Bạn đã vượt quá thời gian cho phép (${formatElapsedTime(
                                           data.lesson?.time_limit || 0
                                       )}).`
-                                    : 'Bạn đã hết lượt chơi. Vui lòng thử lại sau.'}
+                                    : 'Bạn đã hết lives. Vui lòng thử lại sau.'}
                             </p>
                         )}
                         {floatboxReason === 'error' && (

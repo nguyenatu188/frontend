@@ -30,8 +30,8 @@ const useLesson = (category) => {
   }
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    
+    const token = localStorage.getItem('token');
+
     if (!token) {
       setError('Token is required')
       setLoading(false)

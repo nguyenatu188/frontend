@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import useLesson from "../hooks/useLesson";
 import useUserProgress from "../hooks/useUserProgress";
 import Sidebar from "../components/Sidebar";
-import RightSidebar from "../components/RightSidebar";
 import Loading from "../components/Loading";
 import '../index.css';
 
@@ -15,49 +14,9 @@ const Learn = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [selectedLesson, setSelectedLesson] = useState(null);
   const lessonRefs = useRef([]);
-  const { data, loading, error } = useLesson(category);
-  const { data: progressData, startLesson, getLearningStats } = useUserProgress();
+  const { data, loading, error: lessonError } = useLesson(category);
+  const { progressData, statsData, progressLoading, statsLoading, error: progressError, startLesson } = useUserProgress();
   const navigate = useNavigate();
-  const [statsLoaded, setStatsLoaded] = useState(false);
-  const [statsLoading, setStatsLoading] = useState(false);
-
-  useEffect(() => {
-    if (progressData) {
-      console.log('Progress data in component:', JSON.stringify(progressData.completion_status, null, 2));
-    } else {
-      console.log("progressData is null or undefined");
-    }
-  }, [progressData]);
-
-  // Load learning stats once on mount
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token && !statsLoaded) {
-      setStatsLoading(true);
-      console.log("Fetching learning stats...");
-      getLearningStats(token)
-        .then(() => {
-          console.log("Learning stats loaded successfully");
-        })
-        .catch((err) => {
-          console.error("Failed to fetch learning stats:", err.message);
-          setErrorMessage("Không thể tải dữ liệu lives. Vui lòng thử lại sau.");
-        })
-        .finally(() => {
-          setStatsLoading(false);
-          setStatsLoaded(true);
-        });
-    }
-  }, [getLearningStats, statsLoaded]);
-
-  // Log lives when progressData changes
-  useEffect(() => {
-    if (progressData?.lives !== undefined) {
-      console.log("progressStats lives:", progressData.lives);
-    } else {
-      console.log("progressData.lives is undefined");
-    }
-  }, [progressData]);
 
   // Load lessons
   useEffect(() => {
@@ -67,22 +26,26 @@ const Learn = () => {
     }
   }, [data])
 
-  // Log lessons state
+  // Log lessons, progressData, and statsData for debugging
   useEffect(() => {
-    console.log("Lessons state:", lessons)
-  }, [lessons])
+    console.log("Category:", category);
+    console.log("Lessons state:", lessons);
+    console.log("Lesson IDs:", lessons.map(l => l.lesson_id));
+    console.log("progressData:", progressData, "Type:", Array.isArray(progressData) ? "Array" : typeof progressData);
+    console.log("statsData:", statsData);
+  }, [category, lessons, progressData, statsData]);
 
   // Kiểm tra lives và bắt đầu bài học
   const checkAndStartLesson = async (lessonId, token) => {
-    console.log("Checking lives before starting lesson:", progressData?.lives);
-    if (progressData?.lives === undefined) {
+    console.log("Checking lives before starting lesson:", statsData?.lives);
+    if (statsData?.lives === undefined) {
       console.error("Lives data not available");
       setErrorMessage("Không thể tải dữ liệu lives. Vui lòng thử lại sau.");
       setShowFloatbox(false);
       setShowLivesError(true);
       return false;
     }
-    if (progressData.lives === 0) {
+    if (statsData.lives === 0) {
       console.log("Lives = 0, showing lives error floatbox");
       setErrorMessage("Vui lòng chờ để hồi hoặc mua lives ở cửa hàng.");
       setShowFloatbox(false);
@@ -109,6 +72,29 @@ const Learn = () => {
 
   const handleLessonClick = (lesson) => {
     console.log("Clicked lesson:", lesson);
+    const lessonProgress = Array.isArray(progressData) ? progressData.find(p => p.lesson_id == lesson.lesson_id) : null;
+    console.log("Progress for lesson ID", lesson.lesson_id, ":", lessonProgress || "No progress");
+
+    // Find the index of the current lesson
+    const lessonIndex = lessons.findIndex(l => l.lesson_id === lesson.lesson_id);
+
+    // The first lesson (index 0) is always unlocked
+    if (lessonIndex === 0) {
+      setSelectedLesson(lesson);
+      setShowFloatbox(true);
+      return;
+    }
+
+    // Check if the previous lesson is completed
+    const previousLesson = lessons[lessonIndex - 1];
+    const previousLessonProgress = Array.isArray(progressData) ? progressData.find(p => p.lesson_id == previousLesson.lesson_id) : null;
+
+    if (!previousLessonProgress || previousLessonProgress.completion_status !== 'Completed') {
+      setErrorMessage(`Bạn cần hoàn thành bài học "${previousLesson.title}" trước khi bắt đầu bài này.`);
+      setShowLivesError(true);
+      return;
+    }
+
     setSelectedLesson(lesson);
     setShowFloatbox(true);
   };
@@ -130,8 +116,8 @@ const Learn = () => {
       return;
     }
 
-    if (statsLoading) {
-      console.log("Waiting for learning stats to load...");
+    if (statsLoading || progressLoading) {
+      console.log("Waiting for data to load...");
       setErrorMessage("Đang tải dữ liệu, vui lòng chờ...");
       setShowFloatbox(false);
       setShowLivesError(true);
@@ -187,6 +173,38 @@ const Learn = () => {
       .hover-custom-teal:hover { background-color: #00b78a; }
       .hover-custom-blue:hover { background-color: #0f9edf; }
       .hover-custom-pink:hover { background-color: #ec74bc; }
+      .press-button {
+        position: relative;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+      .press-button:active {
+        transform: scale(0.95);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      }
+      .score-display {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-top: 0.25rem;
+      }
+      .completed-badge {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        background: white;
+        border-radius: 9999px;
+        width: 1.5rem;
+        height: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .animate-fade-in {
+        animation: fadeIn 0.3s ease-in;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
     `;
     document.head.appendChild(style);
     return () => document.head.removeChild(style);
@@ -204,12 +222,17 @@ const Learn = () => {
     return colors[groupIdx % colors.length];
   };
 
-  // Hàm tái sử dụng để render floatbox
+  // Hàm tái sử dụng để render floatbox (cho click và lỗi)
   const renderFloatbox = (content, buttons, lessonId) => {
     const groupIdx = lessonId ? lessons.findIndex(lesson => lesson.lesson_id === lessonId) : -1;
     const colorScheme = groupIdx !== -1 ? getGroupColor(Math.floor(groupIdx / 5)) : getGroupColor(0);
+
+    // Check if the lesson is completed and get the score
+    const lessonProgress = Array.isArray(progressData) ? progressData.find(p => p.lesson_id == lessonId) : null;
+    const isCompleted = lessonProgress?.completion_status === 'Completed';
+    const score = isCompleted ? lessonProgress?.score.toFixed(2) : null;
     return (
-      <div className={`animate-slide-in-right absolute left-28 top-0 ${colorScheme.bg} text-white rounded-lg p-4 w-64 shadow-lg z-50`}>
+      <div className={`animate-slide-in-right absolute left-42 top-0 ${colorScheme.bg} text-white rounded-lg p-4 w-64 shadow-lg z-10`}>
         <div className="absolute -left-6 top-6 transform rotate-90">
           <div className={`w-12 h-12 ${colorScheme.bg} rounded-full border-4 ${colorScheme.border} flex items-center justify-center`}>
             <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -224,6 +247,9 @@ const Learn = () => {
         <div className="mt-2 text-center">
           {content.title && <h3 className="text-lg font-bold">{content.title}</h3>}
           {content.message && <p className="text-sm">{content.message}</p>}
+          {isCompleted && score !== null && (
+            <p className="text-sm font-bold mt-2">Điểm: {score}</p>
+          )}
           {buttons.map((btn, idx) => (
             <button
               key={idx}
@@ -246,8 +272,8 @@ const Learn = () => {
     );
   };
 
-  // Handle loading, error, no lessons, or stats loading
-  if (loading || error || lessons.length === 0 || statsLoading) {
+  // Handle loading, error, no lessons, or data loading
+  if (loading || lessonError || lessons.length === 0 || statsLoading || progressLoading || progressError || !Array.isArray(progressData)) {
     return <Loading />;
   }
 
@@ -275,21 +301,44 @@ const Learn = () => {
         </div>
         <div className="flex flex-col items-center gap-12 mt-10 px-4 py-8 overflow-y-auto min-h-screen">
           {lessonGroups.map((group, groupIdx) => {
-            const isOddGroup = groupIdx % 2 !== 0;
             const colorScheme = getGroupColor(groupIdx);
             return (
               <div key={groupIdx} className="relative flex flex-col items-center gap-10">
                 {group.map((lesson, idx) => {
                   const totalIdx = groupIdx * 5 + idx;
                   const isLastInGroup = idx === group.length - 1;
+                  const lessonProgress = Array.isArray(progressData) ? progressData.find(p => p.lesson_id == lesson.lesson_id) : null;
+                  const isCompleted = lessonProgress?.completion_status === 'Completed';
+                  const lessonIndex = lessons.findIndex(l => l.lesson_id === lesson.lesson_id);
+                  const isLocked = lessonIndex > 0 && 
+                    (!Array.isArray(progressData) || 
+                     !progressData.find(p => p.lesson_id == lessons[lessonIndex - 1].lesson_id) ||
+                     progressData.find(p => p.lesson_id == lessons[lessonIndex - 1].lesson_id).completion_status !== 'Completed');
+
                   return (
                     <div key={lesson.lesson_id} className="relative flex flex-col items-center">
                       <button
                         ref={(el) => (lessonRefs.current[totalIdx] = el)}
-                        className={`press-button w-32 h-32 ${colorScheme.bg} rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.25)] ${colorScheme.hover} transition-colors z-10 text-white text-sm font-semibold text-center p-2`}
-                        onClick={() => handleLessonClick(lesson)}
+                        className={`press-button w-42 h-42 rounded-full flex flex-col items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.25)] transition-colors z-10 text-white text-sm font-semibold text-center p-2 relative
+                          ${isLocked ? 'bg-gray-400 cursor-not-allowed' : `${colorScheme.bg} ${colorScheme.hover}`}`}
+                        onClick={() => !isLocked && handleLessonClick(lesson)}
+                        disabled={isLocked}
                       >
-                        {lesson.title}
+                        <span className="text-md mb-1 line-clamp-2">{lesson.title}</span>
+                        {isCompleted && (
+                          <div className="completed-badge">
+                            <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                        )}
+                        {isLocked && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3-9H9V6c0-1.66 1.34-3 3-3s3 1.34 3 3v2z" />
+                            </svg>
+                          </div>
+                        )}
                       </button>
                       {!isLastInGroup && (
                         <div className={`h-10 mt-10 border-l-4 border-dashed ${colorScheme.bg} mx-auto`}></div>
@@ -307,7 +356,7 @@ const Learn = () => {
                       )}
                       {showLivesError && selectedLesson?.lesson_id === lesson.lesson_id && renderFloatbox(
                         {
-                          title: "Hết lives",
+                          title: isLocked ? "Bài học bị khóa" : "Hết lives",
                           message: errorMessage,
                           isError: true,
                         },
@@ -316,7 +365,7 @@ const Learn = () => {
                       )}
                       {idx === 2 && (
                         <div
-                          className={`absolute w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center animate-bounce mt-2 ${isOddGroup ? "right-48" : "left-48"}`}
+                          className="absolute w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center animate-bounce mt-2 left-48"
                         >
                           <svg className={`w-12 h-12 ${colorScheme.text}`} fill="currentColor" viewBox="0 0 24 24">
                             <path d="M12 2c5.52 0 10 4.48 10 10s-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2zm0 2c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zm0 14c2.76 0 5-2.24 5-5h-2c0 1.66-1.34 3-3 3s-3-1.34-3-3H7c0 2.76 2.24 5 5 5z" />
