@@ -1,19 +1,41 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Sidebar from '../components/Sidebar';
+import RightSidebar from '../components/RightSidebar';
 import useShopItems from '../hooks/useShopItems';
+import { useAuthContext } from '../context/AuthContext'; // ⬅ Thêm dòng này
 
 export function Shop() {
   const {
-    gems,
     lives,
     mascots,
     mascotImages,
     loading,
     error,
-    purchaseItem,
     toggleDropdown,
+    updateItemBought, // giả định bạn có 1 hàm update item đã mua
   } = useShopItems();
+
+  const { authUser, setAuthUser } = useAuthContext(); // ⬅ Lấy authUser và setter
+
+  const purchaseItem = (id, price, name, type) => {
+    if ((authUser?.coins ?? 0) < price) {
+      alert("Not enough coins!");
+      return;
+    }
+
+    const confirmed = window.confirm(`Are you sure you want to buy "${name}" for ${price} coins?`);
+    if (!confirmed) return;
+
+    // Trừ coins
+    setAuthUser(prev => ({
+      ...prev,
+      coins: prev.coins - price,
+    }));
+
+    // Cập nhật state item (tuỳ theo type)
+    updateItemBought(id, type);
+  };
 
   if (loading) {
     return (
@@ -38,7 +60,6 @@ export function Shop() {
         <div className="bg-white border border-gray-200 rounded-xl shadow-md p-6 w-full max-w-md relative">
           <h2 className="text-2xl font-bold text-green-600 mb-4 text-center">Shopping</h2>
           <h3 className="text-center text-gray-600 mb-4">Mọi điều bạn cần đều có ở đây 😊</h3>
-          <p className="text-center font-semibold text-purple-500 mb-4">Your Gems: {gems}</p>
 
           <div className="mb-6">
             <h4 className="text-lg font-semibold mb-2">❤️ Lives</h4>
@@ -112,6 +133,7 @@ export function Shop() {
           </div>
         </div>
       </div>
+      <RightSidebar />
     </div>
   );
 }
