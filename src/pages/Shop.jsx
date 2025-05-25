@@ -1,9 +1,9 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Sidebar from '../components/Sidebar';
 import RightSidebar from '../components/RightSidebar';
 import useShopItems from '../hooks/useShopItems';
-import { useAuthContext } from '../context/AuthContext'; // ⬅ Thêm dòng này
+import { useAuthContext } from '../context/AuthContext';
 
 export function Shop() {
   const {
@@ -13,45 +13,20 @@ export function Shop() {
     loading,
     error,
     toggleDropdown,
-    updateItemBought, // giả định bạn có 1 hàm update item đã mua
+    purchaseItem,
   } = useShopItems();
 
-  const { authUser, setAuthUser } = useAuthContext(); // ⬅ Lấy authUser và setter
+  const { authUser, setAuthUser } = useAuthContext();
 
-  const purchaseItem = (id, price, name, type) => {
-    if ((authUser?.coins ?? 0) < price) {
-      alert("Not enough coins!");
-      return;
+  const handlePurchase = async (id, price, name, type) => {
+    const success = await purchaseItem(id, price, name, type);
+    if (success) {
+      setAuthUser(prev => ({
+        ...prev,
+        coins: (prev?.coins ?? 0) - price,
+      }));
     }
-
-    const confirmed = window.confirm(`Are you sure you want to buy "${name}" for ${price} coins?`);
-    if (!confirmed) return;
-
-    // Trừ coins
-    setAuthUser(prev => ({
-      ...prev,
-      coins: prev.coins - price,
-    }));
-
-    // Cập nhật state item (tuỳ theo type)
-    updateItemBought(id, type);
   };
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <p>Loading store...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <p className="text-red-500">{error}</p>
-      </div>
-    );
-  }
 
   return (
     <div className="flex">
@@ -61,76 +36,94 @@ export function Shop() {
           <h2 className="text-2xl font-bold text-green-600 mb-4 text-center">Shopping</h2>
           <h3 className="text-center text-gray-600 mb-4">Mọi điều bạn cần đều có ở đây 😊</h3>
 
-          <div className="mb-6">
-            <h4 className="text-lg font-semibold mb-2">❤️ Lives</h4>
-            <div className="space-y-2">
-              {lives.map(item => (
-                <div key={item.id} className="border rounded-lg px-4 py-2 flex justify-between items-center">
-                  <div>{item.icon} {item.name}</div>
-                  {item.bought ? (
-                    <span className="text-green-600 font-bold">Bought</span>
-                  ) : (
-                    <button
-                      className="text-sm bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
-                      onClick={() => purchaseItem(item.id, item.price, item.name, "life")}
-                    >
-                      Buy ({item.price})
-                    </button>
-                  )}
-                </div>
-              ))}
+          {/* Error message */}
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 text-red-700 text-sm rounded">
+              {error}
             </div>
-          </div>
+          )}
 
-          <hr className="my-6" />
+          {/* Loading state */}
+          {loading ? (
+            <div className="text-center text-sm text-gray-500 my-4">Loading items...</div>
+          ) : (
+            <>
+              {/* Lives Section */}
+              <div className="mb-6">
+                <h4 className="text-lg font-semibold mb-2">❤️ Lives</h4>
+                <div className="space-y-2">
+                  {lives.map(item => (
+                    <div key={item.id} className="border rounded-lg px-4 py-2 flex justify-between items-center">
+                      <div>{item.icon} {item.name}</div>
+                      {item.bought ? (
+                        <span className="text-green-600 font-bold">Bought</span>
+                      ) : (
+                        <button
+                          className="text-sm bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
+                          onClick={() => handlePurchase(item.id, item.price, item.name, "life")}
+                        >
+                          Buy ({item.price})
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-          <div>
-            <h4 className="text-lg font-semibold mb-2">🐾 Pets</h4>
-            <div className="space-y-2">
-              {mascots.map(item => (
-                <div key={item.item_id} className="border rounded-lg px-4 py-2">
-                  <div
-                    onClick={() => item.item_id && toggleDropdown(item.item_id)}
-                    className="flex justify-between items-center cursor-pointer"
-                  >
-                    <div>{item.icon} {item.name}</div>
-                    {item.bought ? (
-                      <span className="text-green-600 font-bold">Bought</span>
-                    ) : (
-                      <button
-                        className="text-sm bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          purchaseItem(item.item_id, item.price, item.name, "pet");
-                        }}
+              <hr className="my-6" />
+
+              {/* Mascots Section */}
+              <div>
+                <h4 className="text-lg font-semibold mb-2">🐾 Pets</h4>
+                <div className="space-y-2">
+                  {mascots.map(item => (
+                    <div key={item.item_id} className="border rounded-lg px-4 py-2">
+                      <div
+                        onClick={() => toggleDropdown(item.item_id)}
+                        className="flex justify-between items-center cursor-pointer"
                       >
-                        Buy ({item.price})
-                      </button>
-                    )}
-                  </div>
+                        <div>{item.icon} {item.name}</div>
+                        {item.bought ? (
+                          <span className="text-green-600 font-bold">Bought</span>
+                        ) : (
+                          <button
+                            className="text-sm bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handlePurchase(item.item_id, item.price, item.name, "pet");
+                            }}
+                          >
+                            Buy ({item.price})
+                          </button>
+                        )}
+                      </div>
 
-                  {item.showDropdown && (
-                    <motion.div
-                      initial={{ height: 0 }}
-                      animate={{ height: "auto" }}
-                      exit={{ height: 0 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                      className="mt-3 flex flex-wrap gap-2"
-                    >
-                      {(mascotImages[item.item_id] || []).map(url => (
-                        <img
-                          key={url}
-                          src={url}
-                          alt={`Mascot ${item.name}`}
-                          className="w-14 h-14 rounded-lg"
-                        />
-                      ))}
-                    </motion.div>
-                  )}
+                      <AnimatePresence>
+                        {item.showDropdown && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                            className="mt-3 flex flex-wrap gap-2 overflow-hidden"
+                          >
+                            {(mascotImages[item.item_id] || []).map((url, idx) => (
+                              <img
+                                key={`${item.item_id}-${idx}`}
+                                src={url}
+                                alt={`Mascot ${item.name} ${idx}`}
+                                className="w-14 h-14 rounded-lg object-cover"
+                              />
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
       <RightSidebar />

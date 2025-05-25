@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
+import { useAuthContext } from '../context/AuthContext';
 
 const useShopItems = () => {
-  const [gems, setGems] = useState(500);
   const [lives, setLives] = useState([]);
   const [mascots, setMascots] = useState([]);
   const [mascotImages, setMascotImages] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const { authUser, setAuthUser } = useAuthContext();
 
   const iconMap = {
     "Extra Life": "❤️",
@@ -17,7 +19,7 @@ const useShopItems = () => {
     "CockRoach": "🪳",
     "Squirrel": "🐿️",
     "Panda": "🐼",
-    "Cat Mascot": "🐱",
+    "Cat": "🐱",
     "1 Lives": "❤️",
   };
 
@@ -25,23 +27,32 @@ const useShopItems = () => {
     setLoading(true);
     setError(null);
     try {
-      const [livesRes, mascotsRes] = await Promise.all([
+      const [livesRes, mascotsRes, boughtMascotsRes] = await Promise.all([
         fetch('http://localhost:8000/api/v1/store-items', {
           method: 'GET',
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         }),
         fetch('http://localhost:8000/api/v1/store-items/mascot', {
           method: 'GET',
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch('http://localhost:8000/api/v1/store-items/mascot/user', {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
 
-      if (!livesRes.ok || !mascotsRes.ok) {
+      if (!livesRes.ok || !mascotsRes.ok || !boughtMascotsRes.ok) {
         throw new Error('Lấy dữ liệu cửa hàng thất bại');
       }
 
       const livesData = await livesRes.json();
       const mascotsData = await mascotsRes.json();
+      const boughtMascotsData = await boughtMascotsRes.json();
+
+      const boughtMascotIds = new Set(
+        boughtMascotsData.data.map(item => item.item_id)
+      );
 
       setLives(
         livesData.data.map(item => ({
@@ -58,7 +69,8 @@ const useShopItems = () => {
       setMascots(
         mascotsData.data.map(item => ({
           ...item,
-          bought: item.bought || false,
+          id: item.item_id,
+          bought: boughtMascotIds.has(item.item_id),
           icon: iconMap[item.item_name] || '🐾',
           name: item.item_name,
           price: item.item_price,
@@ -76,7 +88,7 @@ const useShopItems = () => {
   };
 
   const purchaseItem = async (itemId, price, name, type) => {
-    const confirmed = window.confirm(`Are you sure you want to buy "${name}" for ${price} gems?`);
+    const confirmed = window.confirm(`Are you sure you want to buy "${name}" for ${price} coins?`);
     if (!confirmed) return false;
 
     const token = localStorage.getItem('token');
@@ -96,8 +108,22 @@ const useShopItems = () => {
         throw new Error(data.message || 'Mua hàng thất bại');
       }
 
-      setGems(prev => prev - price);
+      const responseData = await res.json();
 
+      // Cập nhật coin trong context authUser
+      if (responseData.remainingCoins !== undefined) {
+        setAuthUser(prev => ({
+          ...prev,
+          coins: responseData.remainingCoins,
+        }));
+      } else {
+        setAuthUser(prev => ({
+          ...prev,
+          coins: (prev?.coins ?? 0) - price,
+        }));
+      }
+
+      // Đánh dấu là đã mua
       if (type === 'life') {
         setLives(prev => prev.map(item => (item.id === itemId ? { ...item, bought: true } : item)));
       } else {
@@ -136,7 +162,7 @@ const useShopItems = () => {
         const pics = await res.json();
         setMascotImages(prev => ({
           ...prev,
-          [mascotId]: pics.data.map(pic => pic.pic_url.replace(/^public\//, 'http://localhost:8000/'))
+          [mascotId]: pics.data.map(pic => pic.pic_url.replace(/^public\//, 'http://localhost:8000/')),
         }));
         setError(null);
       } catch (err) {
@@ -157,7 +183,6 @@ const useShopItems = () => {
   }, []);
 
   return {
-    gems,
     lives,
     mascots,
     mascotImages,
