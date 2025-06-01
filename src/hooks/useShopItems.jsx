@@ -8,7 +8,7 @@ const useShopItems = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const { authUser, setAuthUser } = useAuthContext();
+  const { setAuthUser } = useAuthContext();
 
   const iconMap = {
     "Extra Life": "❤️",
