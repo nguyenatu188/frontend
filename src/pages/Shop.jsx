@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Sidebar from '../components/Sidebar';
 import RightSidebar from '../components/RightSidebar';
 import useShopItems from '../hooks/useShopItems';
-import { useAuthContext } from '../context/AuthContext';
 
 export function Shop() {
   const {
@@ -16,16 +15,8 @@ export function Shop() {
     purchaseItem,
   } = useShopItems();
 
-  const { authUser, setAuthUser } = useAuthContext();
-
   const handlePurchase = async (id, price, name, type) => {
-    const success = await purchaseItem(id, price, name, type);
-    if (success) {
-      setAuthUser(prev => ({
-        ...prev,
-        coins: (prev?.coins ?? 0) - price,
-      }));
-    }
+    await purchaseItem(id, price, name, type);
   };
 
   return (
@@ -36,14 +27,12 @@ export function Shop() {
           <h2 className="text-2xl font-bold text-green-600 mb-4 text-center">Shopping</h2>
           <h3 className="text-center text-gray-600 mb-4">Mọi điều bạn cần đều có ở đây 😊</h3>
 
-          {/* Error message */}
           {error && (
             <div className="mb-4 p-3 bg-red-100 text-red-700 text-sm rounded">
               {error}
             </div>
           )}
 
-          {/* Loading state */}
           {loading ? (
             <div className="text-center text-sm text-gray-500 my-4">Loading items...</div>
           ) : (
@@ -55,16 +44,12 @@ export function Shop() {
                   {lives.map(item => (
                     <div key={item.id} className="border rounded-lg px-4 py-2 flex justify-between items-center">
                       <div>{item.icon} {item.name}</div>
-                      {item.bought ? (
-                        <span className="text-green-600 font-bold">Bought</span>
-                      ) : (
-                        <button
-                          className="text-sm bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
-                          onClick={() => handlePurchase(item.id, item.price, item.name, "life")}
-                        >
-                          Buy ({item.price})
-                        </button>
-                      )}
+                      <button
+                        className="text-sm bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
+                        onClick={() => handlePurchase(item.id, item.price, item.name, "life")}
+                      >
+                        Buy ({item.price})
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -77,9 +62,9 @@ export function Shop() {
                 <h4 className="text-lg font-semibold mb-2">🐾 Pets</h4>
                 <div className="space-y-2">
                   {mascots.map(item => (
-                    <div key={item.item_id} className="border rounded-lg px-4 py-2">
+                    <div key={item.id} className="border rounded-lg px-4 py-2">
                       <div
-                        onClick={() => toggleDropdown(item.item_id)}
+                        onClick={() => toggleDropdown(item.id)}
                         className="flex justify-between items-center cursor-pointer"
                       >
                         <div>{item.icon} {item.name}</div>
@@ -89,8 +74,8 @@ export function Shop() {
                           <button
                             className="text-sm bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
                             onClick={(e) => {
-                              e.stopPropagation();
-                              handlePurchase(item.item_id, item.price, item.name, "pet");
+                              e.stopPropagation(); // Không cho sự kiện click lan ra toggle dropdown
+                              handlePurchase(item.id, item.price, item.name, "mascot");
                             }}
                           >
                             Buy ({item.price})
@@ -107,9 +92,9 @@ export function Shop() {
                             transition={{ type: "spring", stiffness: 300, damping: 30 }}
                             className="mt-3 flex flex-wrap gap-2 overflow-hidden"
                           >
-                            {(mascotImages[item.item_id] || []).map((url, idx) => (
+                            {(mascotImages[item.id] || []).map((url, idx) => (
                               <img
-                                key={`${item.item_id}-${idx}`}
+                                key={`${item.id}-${idx}`}
                                 src={url}
                                 alt={`Mascot ${item.name} ${idx}`}
                                 className="w-14 h-14 rounded-lg object-cover"

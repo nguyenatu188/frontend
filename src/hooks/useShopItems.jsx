@@ -11,7 +11,6 @@ const useShopItems = () => {
   const { setAuthUser } = useAuthContext();
 
   const iconMap = {
-    "Extra Life": "❤️",
     "Lion": "🦁",
     "Snake": "🐍",
     "Ant": "🐜",
@@ -20,7 +19,6 @@ const useShopItems = () => {
     "Squirrel": "🐿️",
     "Panda": "🐼",
     "Cat": "🐱",
-    "1 Lives": "❤️",
   };
 
   const fetchShopData = async (token) => {
@@ -51,14 +49,12 @@ const useShopItems = () => {
       const boughtMascotsData = await boughtMascotsRes.json();
 
       const boughtMascotIds = new Set(
-        boughtMascotsData.data.map(item => item.item_id)
+        boughtMascotsData.data.map(item => Number(item.item_id))
       );
 
       setLives(
         livesData.data.map(item => ({
-          ...item,
           id: item.item_id,
-          bought: item.bought || false,
           icon: iconMap[item.item_name] || '❤️',
           name: item.item_name,
           price: item.item_price,
@@ -68,9 +64,8 @@ const useShopItems = () => {
 
       setMascots(
         mascotsData.data.map(item => ({
-          ...item,
           id: item.item_id,
-          bought: boughtMascotIds.has(item.item_id),
+          bought: boughtMascotIds.has(Number(item.item_id)),
           icon: iconMap[item.item_name] || '🐾',
           name: item.item_name,
           price: item.item_price,
@@ -106,31 +101,30 @@ const useShopItems = () => {
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.message || 'Mua hàng thất bại');
+      } else {
+        alert(`Bạn đã mua thành công "${name}"!`);
       }
 
       const responseData = await res.json();
 
-      // Cập nhật coin trong context authUser
-      if (responseData.remainingCoins !== undefined) {
-        setAuthUser(prev => ({
-          ...prev,
-          coins: responseData.remainingCoins,
-        }));
-      } else {
-        setAuthUser(prev => ({
-          ...prev,
-          coins: (prev?.coins ?? 0) - price,
-        }));
+      if (responseData.remaining_coins === undefined) {
+        throw new Error('Server không trả về remainingCoins');
       }
 
-      // Đánh dấu là đã mua
-      if (type === 'life') {
-        setLives(prev => prev.map(item => (item.id === itemId ? { ...item, bought: true } : item)));
-      } else {
-        setMascots(prev => prev.map(item => (item.id === itemId ? { ...item, bought: true } : item)));
+      setAuthUser(prev => ({
+        ...prev,
+        coins: responseData.remaining_coins,
+      }));
+
+      // ✅ Nếu là mascot, cập nhật trạng thái bought: true ngay
+      if (type === 'mascot') {
+        setMascots(prev =>
+          prev.map(item =>
+            item.id === itemId ? { ...item, bought: true } : item
+          )
+        );
       }
 
-      setError(null);
       return true;
     } catch (err) {
       setError(err.message);
@@ -139,10 +133,11 @@ const useShopItems = () => {
     }
   };
 
+
   const toggleDropdown = async (mascotId) => {
     setMascots(prev =>
       prev.map(item =>
-        item.item_id === mascotId ? { ...item, showDropdown: !item.showDropdown } : item
+        item.id === mascotId ? { ...item, showDropdown: !item.showDropdown } : item
       )
     );
 
