@@ -20,6 +20,10 @@ import platinumImg from '../assets/platinum.jpg'
 import diamondImg from '../assets/diamond.jpg'
 import useLeaderboard from '../hooks/useLeaderboard'
 
+import BoughtMascotsModal from '../components/BoughtMascotsModal'
+import useBoughtMascots from '../hooks/useBoughtMascots'
+import useUpdateMascotActive from '../hooks/useUpdateMascotActive'
+
 const rankTiers = [
   { name: 'Bronze', image: bronzeImg },
   { name: 'Silver', image: silverImg },
@@ -49,6 +53,32 @@ const Profile = () => {
   const [confirmPass, setConfirmPass] = useState('')
   const { changePassword, isChanging, error: passwordError, isSuccess } = usePasswordChange()
 
+  const [showMascotsModal, setShowMascotsModal] = useState(false)
+
+  const { updateMascotActive, loading: updatingActive } = useUpdateMascotActive()
+
+  const handleToggleActive = async (mascotId) => {
+    try {
+      await updateMascotActive(mascotId);
+      if (refetchMascots) {
+        refetchMascots();
+      }
+    } catch (error) {
+      console.error('Failed to update mascot active status:', error);
+    }
+  };
+
+  const {
+    boughtMascots,
+    mascotImages,
+    expandedMascot,
+    loading: mascotsLoading,
+    error: mascotsError,
+    toggleMascot,
+    refetch: refetchMascots,
+    activeMascotImage
+  } = useBoughtMascots()
+  
   const handleLogout = () => logout()
 
   const getRankImage = (rankName) => {
@@ -195,9 +225,12 @@ const Profile = () => {
 
             <div className="divider divider-info"></div>
 
-            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center">
-              <span className="text-gray-400 text-sm">Linh vật</span>
-            </div>
+            <button
+              className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 w-full max-w-md flex items-center justify-center hover:bg-gray-50 transition-colors"
+              onClick={() => setShowMascotsModal(true)}
+            >
+              <span className="text-gray-400 text-md tracking-wide">Linh vật</span>
+            </button>
             
           </div>
         )}
@@ -230,32 +263,58 @@ const Profile = () => {
         />
 
       <ChangePasswordModal
-          showModal={showPasswordModal}
-          setShowModal={setShowPasswordModal}
-          currentPass={currentPass}
-          setCurrentPass={setCurrentPass}
-          newPass={newPass}
-          setNewPass={setNewPass}
-          confirmPass={confirmPass}
-          setConfirmPass={setConfirmPass}
-          handleSubmit={async (e) => {
-            e.preventDefault()
-            try {
-              await changePassword(currentPass, newPass, confirmPass)
-              if (isSuccess) {
-                setCurrentPass('')
-                setNewPass('')
-                setConfirmPass('')
-                setShowPasswordModal(false)
-              }
-            } catch (err) {
-              console.error('Password change error:', err)
+        showModal={showPasswordModal}
+        setShowModal={setShowPasswordModal}
+        currentPass={currentPass}
+        setCurrentPass={setCurrentPass}
+        newPass={newPass}
+        setNewPass={setNewPass}
+        confirmPass={confirmPass}
+        setConfirmPass={setConfirmPass}
+        handleSubmit={async (e) => {
+          e.preventDefault()
+          try {
+            await changePassword(currentPass, newPass, confirmPass)
+            if (isSuccess) {
+              setCurrentPass('')
+              setNewPass('')
+              setConfirmPass('')
+              setShowPasswordModal(false)
             }
-          }}
-          isChanging={isChanging}
-          passwordError={passwordError}
-          isSuccess={isSuccess}
-        />
+          } catch (err) {
+            console.error('Password change error:', err)
+          }
+        }}
+        isChanging={isChanging}
+        passwordError={passwordError}
+        isSuccess={isSuccess}
+      />
+
+      <BoughtMascotsModal
+        isOpen={showMascotsModal}
+        onClose={() => setShowMascotsModal(false)}
+        boughtMascots={boughtMascots}
+        mascotImages={mascotImages}
+        expandedMascot={expandedMascot}
+        toggleMascot={toggleMascot}
+        loading={mascotsLoading || updatingActive}
+        error={mascotsError}
+        onToggleActive={handleToggleActive}
+      />
+
+      {activeMascotImage && (
+        <div className="absolute bottom-5 right-25 flex items-center justify-center w-42 h-42">
+          {mascotsLoading ? 
+            <span className="loading loading-spinner loading-lg text-info"></span> :
+            <img
+              src={activeMascotImage} 
+              alt="Active mascot" 
+              className="w-full h-full object-contain"
+            />
+          }
+        </div>
+      )}
+
       <FriendsSidebar />
       <RightSidebar />
     </div>

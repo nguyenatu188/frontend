@@ -10,6 +10,7 @@ import {
   isSameDay,
 } from 'date-fns';
 import useCheckIn from '../hooks/useCheckIn';
+import useBoughtMascots from '../hooks/useBoughtMascots';
 
 export function Checkin() {
   const [isCheckedIn, setIsCheckedIn] = useState(false);
@@ -18,6 +19,11 @@ export function Checkin() {
   const today = new Date();
   const todayStr = format(today, 'yyyy-MM-dd');
   const hasCheckedInToday = checkedInDates.includes(todayStr);
+
+  const {
+    loading: mascotsLoading,
+    activeMascotImage
+  } = useBoughtMascots()
 
   const handleCheckIn = async () => {
   const token = localStorage.getItem('token');
@@ -141,6 +147,18 @@ export function Checkin() {
           </button>
         </div>
       </div>
+      {activeMascotImage && (
+        <div className="absolute bottom-5 right-25 flex items-center justify-center w-42 h-42">
+          {mascotsLoading ? 
+            <span className="loading loading-spinner loading-lg text-info"></span> :
+            <img
+              src={activeMascotImage} 
+              alt="Active mascot" 
+              className="w-full h-full object-contain"
+            />
+          }
+        </div>
+      )}
     </div>
   );
 }

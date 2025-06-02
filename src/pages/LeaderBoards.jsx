@@ -9,6 +9,7 @@ import silverImg from '../assets/silver.jpg';
 import goldImg from '../assets/gold.jpg';
 import platinumImg from '../assets/platinum.jpg';
 import diamondImg from '../assets/diamond.jpg';
+import useBoughtMascots from '../hooks/useBoughtMascots';
 
 // Định nghĩa các biến màu sắc cho tone trắng-xám
 const PRIMARY_TEXT_COLOR = 'gray-900'; // Màu chữ chính
@@ -30,7 +31,7 @@ const LeaderBoards = () => {
     friendsLeaderboard, 
     loading, 
     error, 
-    fetchLeaderboard, 
+    fetchLeaderboard,
     fetchUserRank, 
     fetchFriendsLeaderboard
   } = useLeaderboard();
@@ -42,6 +43,11 @@ const LeaderBoards = () => {
     { name: 'Platinum', image: platinumImg },
     { name: 'Diamond', image: diamondImg }, 
   ];
+
+  const {
+    loading: mascotsLoading,
+    activeMascotImage
+  } = useBoughtMascots()
 
   const handleUserClick = (user) => {
     setShowUserDetails(user);
@@ -234,6 +240,18 @@ const LeaderBoards = () => {
           )}
         </div>
       </div>
+      {activeMascotImage && (
+          <div className="absolute bottom-5 right-25 flex items-center justify-center w-42 h-42 fixed">
+          {mascotsLoading ? 
+              <span className="loading loading-spinner loading-lg text-info"></span> :
+              <img
+              src={activeMascotImage} 
+              alt="Active mascot" 
+              className="w-full h-full object-contain"
+              />
+          }
+          </div>
+      )}
       <RightSidebar /> {/* Đảm bảo RightSidebar có tone màu xám/trắng */}
        {/* Modal hiển thị thông tin chi tiết khi nhấp vào người dùng */}
        {showUserDetails && (

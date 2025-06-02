@@ -4,7 +4,8 @@ import { IconBolt, IconTarget, IconCoin } from '@tabler/icons-react';
 import Sidebar from '../components/Sidebar';
 import RightSidebar from '../components/RightSidebar';
 import useDailyMissions from '../hooks/useDailyMissions';
-import { useAuthContext } from '../context/AuthContext'; // Thêm import này
+import { useAuthContext } from '../context/AuthContext';
+import useBoughtMascots from '../hooks/useBoughtMascots';
 
 const Missions = () => {
     const { data, loading, error } = useDailyMissions();
@@ -12,6 +13,11 @@ const Missions = () => {
     const [showFloatbox, setShowFloatbox] = useState(false);
     const [selectedMission, setSelectedMission] = useState(null);
     const { setAuthUser, fetchWithAuth } = useAuthContext();
+
+    const {
+        loading: mascotsLoading,
+        activeMascotImage
+    } = useBoughtMascots()
 
     useEffect(() => {
         if (data?.missions) {
@@ -219,6 +225,30 @@ const Missions = () => {
                     )}
                 </div>
             </div>
+            {activeMascotImage && (
+                <div className="absolute bottom-5 right-25 flex items-center justify-center w-42 h-42">
+                {mascotsLoading ? 
+                    <span className="loading loading-spinner loading-lg text-info"></span> :
+                    <img
+                    src={activeMascotImage} 
+                    alt="Active mascot" 
+                    className="w-full h-full object-contain"
+                    />
+                }
+                </div>
+            )}
+            {activeMascotImage && (
+                <div className="absolute left-100 top-10 flex items-center justify-center w-42 h-42">
+                {mascotsLoading ? 
+                    <span className="loading loading-spinner loading-lg text-info"></span> :
+                    <img
+                    src={activeMascotImage} 
+                    alt="Active mascot" 
+                    className="w-full h-full object-contain"
+                    />
+                }
+                </div>
+            )}
             <RightSidebar />
         </div>
     );

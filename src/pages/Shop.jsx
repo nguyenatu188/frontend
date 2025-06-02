@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Sidebar from '../components/Sidebar';
 import RightSidebar from '../components/RightSidebar';
 import useShopItems from '../hooks/useShopItems';
+import useBoughtMascots from '../hooks/useBoughtMascots';
 
 export function Shop() {
   const {
@@ -14,6 +15,11 @@ export function Shop() {
     toggleDropdown,
     purchaseItem,
   } = useShopItems();
+
+  const {
+    loading: mascotsLoading,
+    activeMascotImage
+  } = useBoughtMascots()
 
   const handlePurchase = async (id, price, name, type) => {
     await purchaseItem(id, price, name, type);
@@ -111,6 +117,18 @@ export function Shop() {
           )}
         </div>
       </div>
+      {activeMascotImage && (
+        <div className="absolute bottom-5 right-25 flex items-center justify-center w-42 h-42">
+        {mascotsLoading ? 
+            <span className="loading loading-spinner loading-lg text-info"></span> :
+            <img
+            src={activeMascotImage} 
+            alt="Active mascot" 
+            className="w-full h-full object-contain"
+            />
+        }
+        </div>
+      )}
       <RightSidebar />
     </div>
   );

@@ -15,7 +15,7 @@ const useShopItems = () => {
     "Snake": "🐍",
     "Ant": "🐜",
     "Corgi": "🐶",
-    "CockRoach": "🪳",
+    "CockRoach": "🦗",
     "Squirrel": "🐿️",
     "Panda": "🐼",
     "Cat": "🐱",

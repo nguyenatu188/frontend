@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import useLesson from "../hooks/useLesson";
 import useUserProgress from "../hooks/useUserProgress";
+import useBoughtMascots from "../hooks/useBoughtMascots";
 import Sidebar from "../components/Sidebar";
 import Loading from "../components/Loading";
 import '../index.css';
@@ -69,6 +70,11 @@ const Learn = () => {
       return false;
     }
   };
+
+  const {
+    loading: mascotsLoading,
+    activeMascotImage
+  } = useBoughtMascots()
 
   const handleLessonClick = (lesson) => {
     console.log("Clicked lesson:", lesson);
@@ -383,6 +389,30 @@ const Learn = () => {
           })}
         </div>
       </div>
+      {activeMascotImage && (
+          <div className="absolute bottom-5 right-25 flex items-center justify-center w-42 h-42 fixed">
+          {mascotsLoading ? 
+              <span className="loading loading-spinner loading-lg text-info"></span> :
+              <img
+              src={activeMascotImage} 
+              alt="Active mascot" 
+              className="w-full h-full object-contain"
+              />
+          }
+          </div>
+      )}
+      {activeMascotImage && (
+        <div className="absolute left-100 top-50 flex items-center justify-center w-42 h-42 fixed">
+        {mascotsLoading ? 
+            <span className="loading loading-spinner loading-lg text-info"></span> :
+            <img
+            src={activeMascotImage} 
+            alt="Active mascot" 
+            className="w-full h-full object-contain"
+            />
+        }
+        </div>
+      )}
     </div>
   )
 }
