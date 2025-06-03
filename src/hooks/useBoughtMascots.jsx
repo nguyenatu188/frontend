@@ -18,7 +18,7 @@ const useBoughtMascots = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [expandedMascot, setExpandedMascot] = useState(null);
-  const [activeMascotImage, setActiveMascotImage] = useState(null);
+  const [activeMascotImages, setActiveMascotImages] = useState({ first: null, second: null });
 
   // Sử dụng useCallback để hàm có thể được truyền xuống mà không gây re-render không cần thiết
   const fetchBoughtMascots = useCallback(async (token) => {
@@ -67,7 +67,26 @@ const useBoughtMascots = () => {
     }
   }, []);
 
-  // Hàm refetch mới để tải lại dữ liệu
+  // Hàm chọn hai ảnh ngẫu nhiên khác nhau
+  const selectRandomImages = (images) => {
+    if (!images || images.length === 0) return { first: null, second: null };
+    if (images.length === 1) return { first: images[0], second: null };
+
+    // Chọn ảnh đầu tiên
+    const firstIndex = Math.floor(Math.random() * images.length);
+    let secondIndex = Math.floor(Math.random() * images.length);
+    
+    // Đảm bảo ảnh thứ hai khác ảnh đầu tiên
+    while (secondIndex === firstIndex && images.length > 1) {
+      secondIndex = Math.floor(Math.random() * images.length);
+    }
+    
+    return {
+      first: images[firstIndex],
+      second: images[secondIndex],
+    };
+  };
+
   const refetch = useCallback(async () => {
     setLoading(true);
     const token = localStorage.getItem('token');
@@ -85,7 +104,7 @@ const useBoughtMascots = () => {
       const activeMascot = mascots.find(m => m.active);
 
       if (!activeMascot) {
-        setActiveMascotImage(null);
+        setActiveMascotImages({ first: null, second: null });
         return;
       }
 
@@ -95,12 +114,9 @@ const useBoughtMascots = () => {
         [activeMascot.id]: images
       }));
       
-      if (images.length > 0) {
-        const randomIndex = Math.floor(Math.random() * images.length);
-        setActiveMascotImage(images[randomIndex]);
-      } else {
-        setActiveMascotImage(null);
-      }
+      // Chọn hai ảnh ngẫu nhiên khác nhau
+      const selectedImages = selectRandomImages(images);
+      setActiveMascotImages(selectedImages);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -143,7 +159,7 @@ const useBoughtMascots = () => {
     error,
     toggleMascot,
     refetch,
-    activeMascotImage
+    activeMascotImages,
   };
 };
 

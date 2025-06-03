@@ -22,7 +22,7 @@ export function Checkin() {
 
   const {
     loading: mascotsLoading,
-    activeMascotImage
+    activeMascotImages
   } = useBoughtMascots()
 
   const handleCheckIn = async () => {
@@ -147,12 +147,12 @@ export function Checkin() {
           </button>
         </div>
       </div>
-      {activeMascotImage && (
+      {activeMascotImages?.first && (
         <div className="absolute bottom-5 right-25 flex items-center justify-center w-42 h-42">
           {mascotsLoading ? 
             <span className="loading loading-spinner loading-lg text-info"></span> :
             <img
-              src={activeMascotImage} 
+              src={activeMascotImages.first} 
               alt="Active mascot" 
               className="w-full h-full object-contain"
             />

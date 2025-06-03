@@ -46,7 +46,7 @@ const LeaderBoards = () => {
 
   const {
     loading: mascotsLoading,
-    activeMascotImage
+    activeMascotImages
   } = useBoughtMascots()
 
   const handleUserClick = (user) => {
@@ -240,12 +240,12 @@ const LeaderBoards = () => {
           )}
         </div>
       </div>
-      {activeMascotImage && (
+      {activeMascotImages?.first && (
           <div className="absolute bottom-5 right-25 flex items-center justify-center w-42 h-42 fixed">
           {mascotsLoading ? 
               <span className="loading loading-spinner loading-lg text-info"></span> :
               <img
-              src={activeMascotImage} 
+              src={activeMascotImages.first} 
               alt="Active mascot" 
               className="w-full h-full object-contain"
               />

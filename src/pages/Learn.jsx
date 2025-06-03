@@ -73,7 +73,7 @@ const Learn = () => {
 
   const {
     loading: mascotsLoading,
-    activeMascotImage
+    activeMascotImages
   } = useBoughtMascots()
 
   const handleLessonClick = (lesson) => {
@@ -220,10 +220,10 @@ const Learn = () => {
   const getGroupColor = (groupIdx) => {
     const colors = [
       { bg: "bg-custom-blue", hover: "hover-custom-blue", border: "border-custom-blue", text: "text-custom-blue" },
-      { bg: "bg-custom-purple", hover: "hover-custom-purple", border: "border-custom-purple", text: "text-custom-purple" },
       { bg: "bg-custom-pink", hover: "hover-custom-pink", border: "border-custom-pink", text: "text-custom-pink" },
       { bg: "bg-custom-green", hover: "hover-custom-green", border: "border-custom-green", text: "text-custom-green" },
       { bg: "bg-custom-teal", hover: "hover-custom-teal", border: "border-custom-teal", text: "text-custom-teal" },
+      { bg: "bg-custom-purple", hover: "hover-custom-purple", border: "border-custom-purple", text: "text-custom-purple" },
     ];
     return colors[groupIdx % colors.length];
   };
@@ -389,28 +389,28 @@ const Learn = () => {
           })}
         </div>
       </div>
-      {activeMascotImage && (
-          <div className="absolute bottom-5 right-25 flex items-center justify-center w-42 h-42 fixed">
+      {activeMascotImages?.first && ( // Sử dụng ảnh đầu tiên
+        <div className="absolute bottom-5 right-25 flex items-center justify-center w-42 h-42 fixed">
           {mascotsLoading ? 
-              <span className="loading loading-spinner loading-lg text-info"></span> :
-              <img
-              src={activeMascotImage} 
-              alt="Active mascot" 
-              className="w-full h-full object-contain"
-              />
-          }
-          </div>
-      )}
-      {activeMascotImage && (
-        <div className="absolute left-100 top-50 flex items-center justify-center w-42 h-42 fixed">
-        {mascotsLoading ? 
             <span className="loading loading-spinner loading-lg text-info"></span> :
             <img
-            src={activeMascotImage} 
-            alt="Active mascot" 
-            className="w-full h-full object-contain"
+              src={activeMascotImages.first} 
+              alt="Active mascot first" 
+              className="w-full h-full object-contain"
             />
-        }
+          }
+        </div>
+      )}
+      {activeMascotImages?.second && ( // Sử dụng ảnh thứ hai
+        <div className="absolute left-100 top-50 flex items-center justify-center w-42 h-42 fixed">
+          {mascotsLoading ? 
+            <span className="loading loading-spinner loading-lg text-info"></span> :
+            <img
+              src={activeMascotImages.second}
+              alt="Active mascot second" 
+              className="w-full h-full object-contain"
+            />
+          }
         </div>
       )}
     </div>
