@@ -151,8 +151,8 @@ const Learn = () => {
 
   // Group lessons into sets of 5 for S-shaped path
   const lessonGroups = []
-  for (let i = 0; i < lessons.length; i += 5) {
-    lessonGroups.push(lessons.slice(i, i + 5))
+  for (let i = 0; i < lessons.length; i += 3) {
+    lessonGroups.push(lessons.slice(i, i + 3))
   }
 
   // Tạo style động
@@ -231,7 +231,7 @@ const Learn = () => {
   // Hàm tái sử dụng để render floatbox (cho click và lỗi)
   const renderFloatbox = (content, buttons, lessonId) => {
     const groupIdx = lessonId ? lessons.findIndex(lesson => lesson.lesson_id === lessonId) : -1;
-    const colorScheme = groupIdx !== -1 ? getGroupColor(Math.floor(groupIdx / 5)) : getGroupColor(0);
+    const colorScheme = groupIdx !== -1 ? getGroupColor(Math.floor(groupIdx / 3)) : getGroupColor(0);
 
     // Check if the lesson is completed and get the score
     const lessonProgress = Array.isArray(progressData) ? progressData.find(p => p.lesson_id == lessonId) : null;
@@ -259,7 +259,7 @@ const Learn = () => {
           {buttons.map((btn, idx) => (
             <button
               key={idx}
-              className={`mt-4 bg-white ${colorScheme.text} font-bold py-2 px-4 rounded-full w-full hover:bg-gray-100 transition-colors`}
+              className={`mt-4 bg-white ${colorScheme.text} font-bold py-2 px-4 rounded-full w-full hover:bg-gray-100 transition-colors ${((isCompleted && btn.label === "Xem lại bài làm") || btn.label === "BẮT ĐẦU")? '' : 'hidden'}`}
               onClick={btn.onClick}
             >
               {btn.label}
@@ -311,7 +311,7 @@ const Learn = () => {
             return (
               <div key={groupIdx} className="relative flex flex-col items-center gap-10">
                 {group.map((lesson, idx) => {
-                  const totalIdx = groupIdx * 5 + idx;
+                  const totalIdx = groupIdx * 3 + idx;
                   const isLastInGroup = idx === group.length - 1;
                   const lessonProgress = Array.isArray(progressData) ? progressData.find(p => p.lesson_id == lesson.lesson_id) : null;
                   const isCompleted = lessonProgress?.completion_status === 'Completed';

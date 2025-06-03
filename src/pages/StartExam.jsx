@@ -4,6 +4,7 @@ import { IconXboxX, IconCircleCheck } from '@tabler/icons-react';
 import useQuestion from '../hooks/useQuestion';
 import useUserProgress from '../hooks/useUserProgress';
 import Loading from '../components/Loading';
+import useBoughtMascots from '../hooks/useBoughtMascots';
 
 const StartExam = () => {
     const { lessonId } = useParams();
@@ -24,6 +25,11 @@ const StartExam = () => {
     const [isStatsFetching, setIsStatsFetching] = useState(false);
     const [buttonText, setButtonText] = useState('KIỂM TRA'); // New state for button text
     const timerRef = useRef(null);
+
+    const {
+        loading: mascotsLoading,
+        activeMascotImage
+    } = useBoughtMascots()
 
     // Fetch lives on mount (once)
     useEffect(() => {
@@ -297,7 +303,12 @@ const StartExam = () => {
                         </div>
                     )}
                 </div>
-                <h3 className="text-2xl font-bold text-black mb-4 text-center">{currentQuestion.question_text}</h3>
+                <h3
+                    className="text-2xl font-bold text-black mb-4 text-center mb-10"
+                    style={{ whiteSpace: 'pre-line' }}
+                >
+                    {currentQuestion.question_text}
+                </h3>
                 {currentQuestion.audio_url && (
                     <div className="flex justify-center mb-4">
                         <audio controls preload="auto" className="w-full max-w-md">
@@ -455,6 +466,18 @@ const StartExam = () => {
                             </button>
                         </div>
                     </div>
+                </div>
+            )}
+            {activeMascotImage && (
+                <div className="left-45 top-45 flex items-center justify-center w-42 h-42 fixed">
+                {mascotsLoading ? 
+                    <span className="loading loading-spinner loading-lg text-info"></span> :
+                    <img
+                    src={activeMascotImage} 
+                    alt="Active mascot" 
+                    className="w-full h-full object-contain"
+                    />
+                }
                 </div>
             )}
         </div>
